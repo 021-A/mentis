@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "971941173900",
+    "project_id": "mentis-learning",
+    "storage_bucket": "mentis-learning.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971941173900:android:63fcd6b71c9568d0a539a9",
+        "android_client_info": {
+          "package_name": "com.example.helloworld"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE7Sa6B_Gi-GZAz5ZFhYR0Cbp7jvOqRYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
