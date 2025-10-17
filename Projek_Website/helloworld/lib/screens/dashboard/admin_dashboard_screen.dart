@@ -1,5 +1,5 @@
 // lib/screens/dashboard/admin_dashboard_screen.dart
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use, avoid_init_to_null, await_only_futures
 import 'package:flutter/material.dart';
 import 'package:helloworld/screens/dashboard/admin_profile_screen.dart' show AdminProfileScreen;
 import 'package:helloworld/screens/analytics/analytics_screen.dart';
@@ -109,6 +109,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final screenSize = ScreenSize.of(context);
     final isMobile = screenSize.isMobile;
 
+    var mobile = null;
+    var mobile2 = null;
     return ResponsiveCardM3(
       mobile: isMobile,
       child: Row(
@@ -120,7 +122,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Text(
                   'Welcome Back, Admin!',
                   style: TextStyle(
-                    fontSize: context.responsiveFontSize(24),
+                    fontSize: context.responsiveFontSize(24, mobile: mobile),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -128,7 +130,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Text(
                   'Here\'s what\'s happening with your store today',
                   style: TextStyle(
-                    fontSize: context.responsiveFontSize(14),
+                    fontSize: context.responsiveFontSize(14, mobile: mobile2),
                     color: Colors.grey[600],
                   ),
                 ),
@@ -222,13 +224,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildQuickActionsSection() {
+    var mobile = null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Quick Actions',
           style: TextStyle(
-            fontSize: context.responsiveFontSize(20),
+            fontSize: context.responsiveFontSize(20, mobile: mobile),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -278,6 +281,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final isMobile = screenSize.isMobile;
     final maxWidth = isDesktop ? 200.0 : 160.0;
 
+    var mobile = null;
     return SizedBox(
       width: maxWidth,
       child: ResponsiveCardM3(
@@ -302,7 +306,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Text(
               title,
               style: TextStyle(
-                fontSize: context.responsiveFontSize(14),
+                fontSize: context.responsiveFontSize(14, mobile: mobile),
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -315,13 +319,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildRecentActivitySection() {
     final isMobile = ScreenSize.of(context).isMobile;
+    var mobile = null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Recent Activity',
           style: TextStyle(
-            fontSize: context.responsiveFontSize(20),
+            fontSize: context.responsiveFontSize(20, mobile: mobile),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -336,6 +341,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               height: context.responsiveSpacing * 2,
             ),
             itemBuilder: (context, index) {
+              var mobile = null;
+              var mobile2 = null;
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Colors.primaries[index % Colors.primaries.length].withOpacity(0.1),
@@ -347,11 +354,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 title: Text(
                   _getActivityTitle(index),
-                  style: TextStyle(fontSize: context.responsiveFontSize(14)),
+                  style: TextStyle(fontSize: context.responsiveFontSize(14, mobile: mobile)),
                 ),
                 subtitle: Text(
                   _getActivityTime(index),
-                  style: TextStyle(fontSize: context.responsiveFontSize(12)),
+                  style: TextStyle(fontSize: context.responsiveFontSize(12, mobile: mobile2)),
                 ),
                 trailing: Icon(
                   Icons.arrow_forward_ios,
@@ -408,7 +415,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     
     return AdaptiveScaffold(
       selectedIndex: _selectedIndex,
-      onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+      onDestinationSelected: (index) {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
       destinations: const [
         NavigationDestination(
           icon: Icon(Icons.dashboard_outlined),
