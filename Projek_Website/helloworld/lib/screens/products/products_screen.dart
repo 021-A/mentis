@@ -1,5 +1,5 @@
 // lib/screens/products/products_screen.dart
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, unnecessary_cast
 
 import 'package:flutter/material.dart';
 import '../../models/product.dart';
@@ -178,13 +178,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   Widget build(BuildContext context) {
     final screenSize = ScreenSize.of(context);
-// gunakan properti boolean yang benar dari ScreenSize
-final isDesktop = screenSize.isDesktop;
-final isTablet = screenSize.isTablet;
-final isMobile = screenSize.isMobile;
-
-final filteredProducts = _filteredProducts;
-
+    final isDesktop = screenSize.isDesktop;
+    final isTablet = screenSize.isTablet;
+    final isMobile = screenSize.isMobile;
+    final filteredProducts = _filteredProducts;
 
     return Scaffold(
       body: Column(
@@ -228,12 +225,13 @@ final filteredProducts = _filteredProducts;
       fillColor: Colors.grey[100],
     );
 
-    final padding = context.responsivePadding;
-    final spacing = context.responsiveSpacing;
-    final smallSpacing = context.responsiveSmallSpacing;
+    // Get responsive values (type already known by analyzer)
+    final padding = context.responsivePadding as EdgeInsets;
+    final spacing = context.responsiveSpacing as double;
+    final smallSpacing = context.responsiveSmallSpacing as double;
 
     return Container(
-      padding: padding is EdgeInsets ? padding : const EdgeInsets.all(16.0),
+      padding: padding,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
@@ -256,15 +254,15 @@ final filteredProducts = _filteredProducts;
                     Text(
                       'Products',
                       style: TextStyle(
-                        fontSize: context.responsiveFontSize(24, mobile: isMobile),
+                        fontSize: isMobile ? 20.0 : 24.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: smallSpacing is double ? smallSpacing : 8.0),
+                    SizedBox(height: smallSpacing),
                     Text(
                       '${_products.length} total products',
                       style: TextStyle(
-                        fontSize: context.responsiveFontSize(14, mobile: isMobile),
+                        fontSize: isMobile ? 12.0 : 14.0,
                         color: Colors.grey[600],
                       ),
                     ),
@@ -279,7 +277,7 @@ final filteredProducts = _filteredProducts;
                 ),
             ],
           ),
-          SizedBox(height: spacing is double ? spacing : 12.0),
+          SizedBox(height: spacing),
           // Search Bar
           TextField(
             onChanged: (value) => setState(() => _searchQuery = value),
@@ -291,13 +289,14 @@ final filteredProducts = _filteredProducts;
   }
 
   Widget _buildCategoryFilter() {
-    final padding = context.responsivePadding;
-    final spacing = context.responsiveSpacing;
-    final smallSpacing = context.responsiveSmallSpacing;
+    // Get responsive values (type already known by analyzer)
+    final padding = context.responsivePadding as EdgeInsets;
+    final spacing = context.responsiveSpacing as double;
+    final smallSpacing = context.responsiveSmallSpacing as double;
     
-    final horizontalPadding = padding is EdgeInsets ? padding.horizontal / 2 : 12.0;
-    final verticalPadding = spacing is double ? spacing : 12.0;
-    final itemSpacing = smallSpacing is double ? smallSpacing : 8.0;
+    final horizontalPadding = padding.horizontal / 2;
+    final verticalPadding = spacing;
+    final itemSpacing = smallSpacing;
 
     return Container(
       height: 60,
@@ -343,19 +342,17 @@ final filteredProducts = _filteredProducts;
     final crossAxisCount = isDesktop ? 4 : (isTablet ? 3 : 2);
     final childAspectRatio = isDesktop ? 0.75 : (isTablet ? 0.7 : 0.65);
     
-    final padding = context.responsivePadding;
-    final spacing = context.responsiveSpacing;
-    
-    final paddingValue = padding is EdgeInsets ? padding : const EdgeInsets.all(12.0);
-    final spacingValue = spacing is double ? spacing : 12.0;
+    // Get responsive values (type already known by analyzer)
+    final padding = context.responsivePadding as EdgeInsets;
+    final spacing = context.responsiveSpacing as double;
 
     return GridView.builder(
-      padding: paddingValue,
+      padding: padding,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         childAspectRatio: childAspectRatio,
-        crossAxisSpacing: spacingValue,
-        mainAxisSpacing: spacingValue,
+        crossAxisSpacing: spacing,
+        mainAxisSpacing: spacing,
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
@@ -381,16 +378,14 @@ final filteredProducts = _filteredProducts;
   }
 
   Widget _buildListView(List<BaseProduct> products) {
-    final padding = context.responsivePadding;
-    final spacing = context.responsiveSpacing;
-    
-    final paddingValue = padding is EdgeInsets ? padding : const EdgeInsets.all(12.0);
-    final spacingValue = spacing is double ? spacing : 12.0;
+    // Get responsive values (type already known by analyzer)
+    final padding = context.responsivePadding as EdgeInsets;
+    final spacing = context.responsiveSpacing as double;
 
     return ListView.separated(
-      padding: paddingValue,
+      padding: padding,
       itemCount: products.length,
-      separatorBuilder: (_, __) => SizedBox(height: spacingValue),
+      separatorBuilder: (_, __) => SizedBox(height: spacing),
       itemBuilder: (context, index) {
         final product = products[index];
         return ProductCard(
@@ -414,15 +409,11 @@ final filteredProducts = _filteredProducts;
   }
 
   Widget _buildEmptyState(bool isMobile) {
-    final spacing = context.responsiveSpacing;
-    final smallSpacing = context.responsiveSmallSpacing;
-    final largeSpacing = context.responsiveLargeSpacing;
-    final iconSize = context.responsiveIconSize(80);
-    
-    final spacingValue = spacing is double ? spacing : 12.0;
-    final smallSpacingValue = smallSpacing is double ? smallSpacing : 8.0;
-    final largeSpacingValue = largeSpacing is double ? largeSpacing : 20.0;
-    final iconSizeValue = iconSize is double ? iconSize : 80.0;
+    // Get responsive values (type already known by analyzer)
+    final spacing = context.responsiveSpacing as double;
+    final smallSpacing = context.responsiveSmallSpacing as double;
+    final largeSpacing = context.responsiveLargeSpacing as double;
+    final iconSize = context.responsiveIconSize(80) as double;
 
     return Center(
       child: Column(
@@ -430,30 +421,30 @@ final filteredProducts = _filteredProducts;
         children: [
           Icon(
             _searchQuery.isNotEmpty ? Icons.search_off : Icons.inventory_2_outlined,
-            size: iconSizeValue,
+            size: iconSize,
             color: Colors.grey[400],
           ),
-          SizedBox(height: spacingValue),
+          SizedBox(height: spacing),
           Text(
             _searchQuery.isNotEmpty ? 'No products found' : 'No products yet',
             style: TextStyle(
-              fontSize: context.responsiveFontSize(18, mobile: isMobile),
+              fontSize: isMobile ? 16.0 : 18.0,
               fontWeight: FontWeight.w600,
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: smallSpacingValue),
+          SizedBox(height: smallSpacing),
           Text(
             _searchQuery.isNotEmpty 
                 ? 'Try different search terms' 
                 : 'Add your first product to get started',
             style: TextStyle(
-              fontSize: context.responsiveFontSize(14, mobile: isMobile),
+              fontSize: isMobile ? 12.0 : 14.0,
               color: Colors.grey[500],
             ),
           ),
           if (_searchQuery.isEmpty) ...[
-            SizedBox(height: largeSpacingValue),
+            SizedBox(height: largeSpacing),
             ElevatedButton.icon(
               onPressed: () => _navigateToAddOrEdit(),
               icon: const Icon(Icons.add),

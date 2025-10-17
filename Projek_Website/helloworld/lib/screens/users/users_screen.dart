@@ -1,5 +1,5 @@
 // lib/screens/users/users_screen.dart
-// ignore_for_file: deprecated_member_use, avoid_init_to_null, duplicate_ignore, unused_local_variable
+// ignore_for_file: deprecated_member_use, avoid_init_to_null, duplicate_ignore, unused_local_variable, unrelated_type_equality_checks
 
 import 'package:flutter/material.dart';
 // ignore: unused_import
@@ -271,14 +271,16 @@ class _UsersScreenState extends State<UsersScreen> {
     final screenSize = ScreenSize.of(context);
     final isDesktop = screenSize == ScreenSizeType.desktop;
     final isTablet = screenSize == ScreenSizeType.tablet;
+    final isMobile = screenSize == ScreenSizeType.mobile;
     final filtered = _filteredUsers;
 
-    var mobile = null;
+    final padding = context.responsivePadding as EdgeInsets;
+
     return Scaffold(
       body: Column(
         children: [
           // Header Section
-          _buildHeader(isDesktop, isTablet),
+          _buildHeader(isDesktop, isTablet, isMobile),
 
           // Stats Summary
           _buildStatsSummary(isDesktop, isTablet),
@@ -288,13 +290,13 @@ class _UsersScreenState extends State<UsersScreen> {
 
           // User Count
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: context.responsivePadding),
+            padding: EdgeInsets.symmetric(horizontal: padding.horizontal / 2),
             child: Row(
               children: [
                 Text(
                   '${filtered.length} user(s)',
                   style: TextStyle(
-                    fontSize: context.responsiveFontSize(14, mobile: mobile),
+                    fontSize: isMobile ? 12.0 : 14.0,
                     color: Colors.grey[600],
                   ),
                 ),
@@ -311,12 +313,12 @@ class _UsersScreenState extends State<UsersScreen> {
             ),
           ),
 
-          SizedBox(height: context.responsiveSpacing),
+          SizedBox(height: context.responsiveSpacing as double),
 
           // List
           Expanded(
             child: filtered.isEmpty
-                ? _buildEmptyState()
+                ? _buildEmptyState(isMobile)
                 : (_isGridView && (isDesktop || isTablet))
                     ? _buildGridView(filtered, isDesktop, isTablet)
                     : _buildListView(filtered),
@@ -331,11 +333,13 @@ class _UsersScreenState extends State<UsersScreen> {
     );
   }
 
-  Widget _buildHeader(bool isDesktop, bool isTablet) {
-    var mobile = null;
-    var mobile2 = null;
+  Widget _buildHeader(bool isDesktop, bool isTablet, bool isMobile) {
+    final padding = context.responsivePadding as EdgeInsets;
+    final spacing = context.responsiveSpacing as double;
+    final smallSpacing = context.responsiveSmallSpacing as double;
+
     return Container(
-      padding: EdgeInsets.all(context.responsivePadding),
+      padding: padding,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
@@ -358,15 +362,15 @@ class _UsersScreenState extends State<UsersScreen> {
                     Text(
                       'User Management',
                       style: TextStyle(
-                        fontSize: context.responsiveFontSize(24, mobile: mobile),
+                        fontSize: isMobile ? 20.0 : 24.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: context.responsiveSmallSpacing / 2),
+                    SizedBox(height: smallSpacing / 2),
                     Text(
                       'Manage your platform users',
                       style: TextStyle(
-                        fontSize: context.responsiveFontSize(14, mobile: mobile2),
+                        fontSize: isMobile ? 12.0 : 14.0,
                         color: Colors.grey[600],
                       ),
                     ),
@@ -381,7 +385,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 ),
             ],
           ),
-          SizedBox(height: context.responsiveSpacing),
+          SizedBox(height: spacing),
           // Search Bar
           TextField(
             controller: _searchCtrl,
@@ -417,16 +421,20 @@ class _UsersScreenState extends State<UsersScreen> {
     final totalRevenue = _users.fold<double>(0, (sum, u) => sum + u.totalSpent);
 
     final crossAxisCount = isDesktop ? 4 : (isTablet ? 2 : 2);
+    final paddingValue = context.responsivePadding;
+    final padding = paddingValue is EdgeInsets ? paddingValue : const EdgeInsets.all(12.0);
+    final smallSpacingValue = context.responsiveSmallSpacing;
+    final smallSpacing = smallSpacingValue is double ? smallSpacingValue : 8.0;
 
     return Padding(
-      padding: EdgeInsets.all(context.responsivePadding),
+      padding: padding,
       child: GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: crossAxisCount,
         childAspectRatio: isDesktop ? 2.5 : 2,
-        crossAxisSpacing: context.responsiveSmallSpacing,
-        mainAxisSpacing: context.responsiveSmallSpacing,
+        crossAxisSpacing: smallSpacing,
+        mainAxisSpacing: smallSpacing,
         children: [
           _buildStatCard(
             'Total Users',
@@ -458,19 +466,23 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    var mobile = null;
+    final smallSpacingValue = context.responsiveSmallSpacing;
+    final smallSpacing = smallSpacingValue is double ? smallSpacingValue : 8.0;
+    final iconSizeValue = context.responsiveIconSize(20);
+    final iconSize = iconSizeValue is double ? iconSizeValue : 20.0;
+
     return ResponsiveCardM3(
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(context.responsiveSmallSpacing),
+            padding: EdgeInsets.all(smallSpacing),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             ),
-            child: Icon(icon, color: color, size: context.responsiveIconSize(20)),
+            child: Icon(icon, color: color, size: iconSize),
           ),
-          SizedBox(width: context.responsiveSmallSpacing),
+          SizedBox(width: smallSpacing),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,8 +490,8 @@ class _UsersScreenState extends State<UsersScreen> {
               children: [
                 Text(
                   value,
-                  style: TextStyle(
-                    fontSize: context.responsiveFontSize(16, mobile: mobile),
+                  style: const TextStyle(
+                    fontSize: 16.0,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
@@ -488,7 +500,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: context.responsiveFontSize(12, mobile: null),
+                    fontSize: 12.0,
                     color: Colors.grey[600],
                   ),
                   maxLines: 1,
@@ -503,30 +515,34 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildFilters() {
+    final spacing = context.responsiveSpacing as double;
+    final padding = context.responsivePadding as EdgeInsets;
+    final smallSpacing = context.responsiveSmallSpacing as double;
+
     return Container(
       height: 60,
       padding: EdgeInsets.symmetric(
-        vertical: context.responsiveSpacing,
-        horizontal: context.responsivePadding,
+        vertical: spacing,
+        horizontal: padding.horizontal / 2,
       ),
       child: Row(
         children: [
-          Text(
+          const Text(
             'Filter:',
             style: TextStyle(
-              fontSize: context.responsiveFontSize(14, mobile: null),
+              fontSize: 14.0,
               fontWeight: FontWeight.w600,
             ),
           ),
-          SizedBox(width: context.responsiveSmallSpacing),
+          SizedBox(width: smallSpacing),
           Expanded(
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
                 _buildFilterChip('All', 'all'),
-                SizedBox(width: context.responsiveSmallSpacing / 2),
+                SizedBox(width: smallSpacing / 2),
                 _buildFilterChip('Admin', 'admin'),
-                SizedBox(width: context.responsiveSmallSpacing / 2),
+                SizedBox(width: smallSpacing / 2),
                 _buildFilterChip('User', 'user'),
               ],
             ),
@@ -555,10 +571,13 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildListView(List<UserEntry> users) {
+    final padding = context.responsivePadding as EdgeInsets;
+    final smallSpacing = context.responsiveSmallSpacing as double;
+
     return ListView.builder(
       padding: EdgeInsets.symmetric(
-        horizontal: context.responsivePadding,
-        vertical: context.responsiveSmallSpacing,
+        horizontal: padding.horizontal / 2,
+        vertical: smallSpacing,
       ),
       itemCount: users.length,
       itemBuilder: (context, index) => _buildUserCard(users[index]),
@@ -567,13 +586,16 @@ class _UsersScreenState extends State<UsersScreen> {
 
   Widget _buildGridView(List<UserEntry> users, bool isDesktop, bool isTablet) {
     final crossAxisCount = isDesktop ? 3 : 2;
+    final padding = context.responsivePadding as EdgeInsets;
+    final spacing = context.responsiveSpacing as double;
+
     return GridView.builder(
-      padding: EdgeInsets.all(context.responsivePadding),
+      padding: padding,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         childAspectRatio: isDesktop ? 1.2 : 0.9,
-        crossAxisSpacing: context.responsiveSpacing,
-        mainAxisSpacing: context.responsiveSpacing,
+        crossAxisSpacing: spacing,
+        mainAxisSpacing: spacing,
       ),
       itemCount: users.length,
       itemBuilder: (context, index) => _buildUserGridCard(users[index]),
@@ -588,10 +610,14 @@ class _UsersScreenState extends State<UsersScreen> {
       decimalDigits: 0,
     );
 
+    final spacing = context.responsiveSpacing as double;
+    final smallSpacing = context.responsiveSmallSpacing as double;
+    final iconSize = context.responsiveIconSize(12) as double;
+
     return ResponsiveCardM3(
-      margin: EdgeInsets.only(bottom: context.responsiveSpacing),
+      margin: EdgeInsets.only(bottom: spacing),
       child: ListTile(
-        contentPadding: EdgeInsets.all(context.responsiveSmallSpacing),
+        contentPadding: EdgeInsets.all(smallSpacing),
         onTap: () => _openDetail(user),
         leading: CircleAvatar(
           radius: 24,
@@ -604,7 +630,7 @@ class _UsersScreenState extends State<UsersScreen> {
                   style: TextStyle(
                     color: user.isActive ? Colors.blue : Colors.grey,
                     fontWeight: FontWeight.bold,
-                    fontSize: context.responsiveFontSize(16, mobile: null),
+                    fontSize: 16.0,
                   ),
                 )
               : ClipOval(child: Image.network(user.avatarUrl!, fit: BoxFit.cover)),
@@ -614,8 +640,8 @@ class _UsersScreenState extends State<UsersScreen> {
             Expanded(
               child: Text(
                 user.name,
-                style: TextStyle(
-                  fontSize: context.responsiveFontSize(16, mobile: null),
+                style: const TextStyle(
+                  fontSize: 16.0,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -624,34 +650,31 @@ class _UsersScreenState extends State<UsersScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: user.role == 'admin'
-                    // ignore: deprecated_member_use
                     ? Colors.orange.withOpacity(0.1)
-                    // ignore: deprecated_member_use
                     : Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 user.role.toUpperCase(),
                 style: TextStyle(
-                  fontSize: context.responsiveFontSize(10, mobile: null),
+                  fontSize: 10.0,
                   color: user.role == 'admin' ? Colors.orange : Colors.blue,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            SizedBox(width: context.responsiveSmallSpacing / 2),
+            SizedBox(width: smallSpacing / 2),
             if (!user.isActive)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
                   color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text(
+                child: const Text(
                   'INACTIVE',
                   style: TextStyle(
-                    fontSize: context.responsiveFontSize(10, mobile: null),
+                    fontSize: 10.0,
                     color: Colors.red,
                     fontWeight: FontWeight.bold,
                   ),
@@ -662,42 +685,40 @@ class _UsersScreenState extends State<UsersScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: context.responsiveSmallSpacing / 2),
+            SizedBox(height: smallSpacing / 2),
             Text(
               user.email,
-              style: TextStyle(fontSize: context.responsiveFontSize(14, mobile: null)),
+              style: const TextStyle(fontSize: 14.0),
             ),
-            SizedBox(height: context.responsiveSmallSpacing / 2),
+            SizedBox(height: smallSpacing / 2),
             Row(
               children: [
-                Icon(Icons.calendar_today,
-                    size: context.responsiveIconSize(12), color: Colors.grey[600]),
-                SizedBox(width: 4),
+                Icon(Icons.calendar_today, size: iconSize, color: Colors.grey[600]),
+                const SizedBox(width: 4),
                 Text(
                   createdStr,
                   style: TextStyle(
-                    fontSize: context.responsiveFontSize(12, mobile: null),
+                    fontSize: 12.0,
                     color: Colors.grey[600],
                   ),
                 ),
-                SizedBox(width: context.responsiveSpacing),
-                Icon(Icons.shopping_cart,
-                    size: context.responsiveIconSize(12), color: Colors.grey[600]),
-                SizedBox(width: 4),
+                SizedBox(width: spacing),
+                Icon(Icons.shopping_cart, size: iconSize, color: Colors.grey[600]),
+                const SizedBox(width: 4),
                 Text(
                   '${user.totalOrders} orders',
                   style: TextStyle(
-                    fontSize: context.responsiveFontSize(12, mobile: null),
+                    fontSize: 12.0,
                     color: Colors.grey[600],
                   ),
                 ),
               ],
             ),
-            SizedBox(height: context.responsiveSmallSpacing / 2),
+            SizedBox(height: smallSpacing / 2),
             Text(
               'Total: ${currencyFormat.format(user.totalSpent)}',
               style: TextStyle(
-                fontSize: context.responsiveFontSize(13, mobile: null),
+                fontSize: 13.0,
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).primaryColor,
               ),
@@ -728,7 +749,8 @@ class _UsersScreenState extends State<UsersScreen> {
       decimalDigits: 0,
     );
 
-    var mobile = null;
+    final smallSpacing = context.responsiveSmallSpacing as double;
+
     return ResponsiveCardM3(
       onTap: () => _openDetail(user),
       child: Column(
@@ -767,11 +789,11 @@ class _UsersScreenState extends State<UsersScreen> {
               ),
             ],
           ),
-          SizedBox(height: context.responsiveSmallSpacing),
+          SizedBox(height: smallSpacing),
           Text(
             user.name,
-            style: TextStyle(
-              fontSize: context.responsiveFontSize(16, mobile: null),
+            style: const TextStyle(
+              fontSize: 16.0,
               fontWeight: FontWeight.w600,
             ),
             maxLines: 1,
@@ -780,13 +802,13 @@ class _UsersScreenState extends State<UsersScreen> {
           Text(
             user.email,
             style: TextStyle(
-              fontSize: context.responsiveFontSize(12, mobile: null),
+              fontSize: 12.0,
               color: Colors.grey[600],
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: context.responsiveSmallSpacing),
+          SizedBox(height: smallSpacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -794,34 +816,31 @@ class _UsersScreenState extends State<UsersScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: user.role == 'admin'
-                      // ignore: deprecated_member_use
                       ? Colors.orange.withOpacity(0.1)
-                      // ignore: deprecated_member_use
                       : Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   user.role.toUpperCase(),
                   style: TextStyle(
-                    fontSize: context.responsiveFontSize(10, mobile: null),
+                    fontSize: 10.0,
                     color: user.role == 'admin' ? Colors.orange : Colors.blue,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
               if (!user.isActive) ...[
-                SizedBox(width: context.responsiveSmallSpacing / 2),
+                SizedBox(width: smallSpacing / 2),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    // ignore: deprecated_member_use
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(
+                  child: const Text(
                     'INACTIVE',
                     style: TextStyle(
-                      fontSize: context.responsiveFontSize(10, mobile: null),
+                      fontSize: 10.0,
                       color: Colors.red,
                       fontWeight: FontWeight.bold,
                     ),
@@ -830,9 +849,9 @@ class _UsersScreenState extends State<UsersScreen> {
               ],
             ],
           ),
-          SizedBox(height: context.responsiveSmallSpacing),
-          Divider(height: 1),
-          SizedBox(height: context.responsiveSmallSpacing),
+          SizedBox(height: smallSpacing),
+          const Divider(height: 1),
+          SizedBox(height: smallSpacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -840,15 +859,15 @@ class _UsersScreenState extends State<UsersScreen> {
                 children: [
                   Text(
                     user.totalOrders.toString(),
-                    style: TextStyle(
-                      fontSize: context.responsiveFontSize(16, mobile: null),
+                    style: const TextStyle(
+                      fontSize: 16.0,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     'Orders',
                     style: TextStyle(
-                      fontSize: context.responsiveFontSize(11, mobile: null),
+                      fontSize: 11.0,
                       color: Colors.grey[600],
                     ),
                   ),
@@ -860,7 +879,7 @@ class _UsersScreenState extends State<UsersScreen> {
                   Text(
                     'Rp ${(user.totalSpent / 1000000).toStringAsFixed(1)}M',
                     style: TextStyle(
-                      fontSize: context.responsiveFontSize(14, mobile: null),
+                      fontSize: 14.0,
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).primaryColor,
                     ),
@@ -868,7 +887,7 @@ class _UsersScreenState extends State<UsersScreen> {
                   Text(
                     'Spent',
                     style: TextStyle(
-                      fontSize: context.responsiveFontSize(11, mobile: mobile),
+                      fontSize: 11.0,
                       color: Colors.grey[600],
                     ),
                   ),
@@ -881,7 +900,12 @@ class _UsersScreenState extends State<UsersScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isMobile) {
+    final spacing = context.responsiveSpacing as double;
+    final smallSpacing = context.responsiveSmallSpacing as double;
+    final largeSpacing = context.responsiveLargeSpacing as double;
+    final iconSize = context.responsiveIconSize(80) as double;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -890,30 +914,30 @@ class _UsersScreenState extends State<UsersScreen> {
             _searchCtrl.text.isNotEmpty
                 ? Icons.search_off
                 : Icons.people_outline,
-            size: context.responsiveIconSize(80),
+            size: iconSize,
             color: Colors.grey[400],
           ),
-          SizedBox(height: context.responsiveSpacing),
+          SizedBox(height: spacing),
           Text(
             _searchCtrl.text.isNotEmpty ? 'No users found' : 'No users yet',
             style: TextStyle(
-              fontSize: context.responsiveFontSize(18, mobile: null),
+              fontSize: isMobile ? 16.0 : 18.0,
               fontWeight: FontWeight.w600,
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: context.responsiveSmallSpacing),
+          SizedBox(height: smallSpacing),
           Text(
             _searchCtrl.text.isNotEmpty
                 ? 'Try different search terms'
                 : 'Add your first user to get started',
             style: TextStyle(
-              fontSize: context.responsiveFontSize(14, mobile: null),
+              fontSize: isMobile ? 12.0 : 14.0,
               color: Colors.grey[500],
             ),
           ),
           if (_searchCtrl.text.isEmpty) ...[
-            SizedBox(height: context.responsiveLargeSpacing),
+            SizedBox(height: largeSpacing),
             ElevatedButton.icon(
               onPressed: () => _openAddEditDialog(),
               icon: const Icon(Icons.person_add),
@@ -940,10 +964,15 @@ class UserDetailScreen extends StatelessWidget {
       decimalDigits: 0,
     );
 
+    final padding = context.responsivePadding as EdgeInsets;
+    final spacing = context.responsiveSpacing as double;
+    final smallSpacing = context.responsiveSmallSpacing as double;
+    final largeSpacing = context.responsiveLargeSpacing as double;
+
     return Scaffold(
       appBar: AppBar(title: const Text('User Detail')),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(context.responsivePadding),
+        padding: padding,
         child: Column(
           children: [
             CircleAvatar(
@@ -958,44 +987,44 @@ class UserDetailScreen extends StatelessWidget {
                   : ClipOval(
                       child: Image.network(user.avatarUrl!, fit: BoxFit.cover)),
             ),
-            SizedBox(height: context.responsiveSpacing),
+            SizedBox(height: spacing),
             Text(
               user.name,
-              style: TextStyle(
-                fontSize: context.responsiveFontSize(24, mobile: null),
+              style: const TextStyle(
+                fontSize: 24.0,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: context.responsiveSmallSpacing / 2),
+            SizedBox(height: smallSpacing / 2),
             Text(
               user.email,
               style: TextStyle(
-                fontSize: context.responsiveFontSize(14, mobile: null),
+                fontSize: 14.0,
                 color: Colors.grey[600],
               ),
             ),
-            SizedBox(height: context.responsiveSpacing),
+            SizedBox(height: spacing),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Chip(label: Text(user.role.toUpperCase())),
-                SizedBox(width: context.responsiveSmallSpacing),
+                SizedBox(width: smallSpacing),
                 Chip(label: Text(user.isActive ? 'Active' : 'Disabled')),
               ],
             ),
-            SizedBox(height: context.responsiveLargeSpacing),
+            SizedBox(height: largeSpacing),
             ResponsiveCardM3(
               child: Column(
                 children: [
                   _buildDetailRow(context, Icons.calendar_today, 'Created at', created),
-                  Divider(height: context.responsiveSpacing * 2),
+                  Divider(height: spacing * 2),
                   _buildDetailRow(
                     context,
                     Icons.shopping_cart,
                     'Total Orders',
                     user.totalOrders.toString(),
                   ),
-                  Divider(height: context.responsiveSpacing * 2),
+                  Divider(height: spacing * 2),
                   _buildDetailRow(
                     context,
                     Icons.attach_money,
@@ -1005,7 +1034,7 @@ class UserDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: context.responsiveLargeSpacing),
+            SizedBox(height: largeSpacing),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -1022,10 +1051,13 @@ class UserDetailScreen extends StatelessWidget {
 
   Widget _buildDetailRow(
       BuildContext context, IconData icon, String label, String value) {
+    final spacing = context.responsiveSpacing as double;
+    final iconSize = context.responsiveIconSize(20) as double;
+
     return Row(
       children: [
-        Icon(icon, size: context.responsiveIconSize(20), color: Colors.grey[600]),
-        SizedBox(width: context.responsiveSpacing),
+        Icon(icon, size: iconSize, color: Colors.grey[600]),
+        SizedBox(width: spacing),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1033,14 +1065,14 @@ class UserDetailScreen extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: context.responsiveFontSize(12, mobile: null),
+                  fontSize: 12.0,
                   color: Colors.grey[600],
                 ),
               ),
               Text(
                 value,
-                style: TextStyle(
-                  fontSize: context.responsiveFontSize(16, mobile: null),
+                style: const TextStyle(
+                  fontSize: 16.0,
                   fontWeight: FontWeight.w600,
                 ),
               ),
