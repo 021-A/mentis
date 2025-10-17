@@ -1,21 +1,21 @@
 // lib/screens/dashboard/admin_dashboard_screen.dart
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:helloworld/screens/dashboard/admin_profile_screen.dart' show AdminProfileScreen;
-import 'package:helloworld/screens/dashboard/settings_screen.dart' show SettingsScreen;
-import 'package:helloworld/screens/products/add_product_screen.dart';
+import 'package:helloworld/screens/analytics/analytics_screen.dart';
 import 'package:helloworld/screens/orders/orders_screen.dart';
 import 'package:helloworld/screens/products/products_screen.dart';
 import 'package:helloworld/screens/users/users_screen.dart';
-import 'package:helloworld/screens/analytics/analytics_screen.dart';
-
-import '../../services/auth_service.dart';
-import '../../services/product_service.dart';
-import '../../models/product.dart';
-import '../../widgets/stat_card.dart';
-import '../../widgets/product_card.dart';
-import '../../widgets/responsive_card.dart';
+import 'package:helloworld/services/auth_service.dart';
+import 'package:helloworld/services/product_service.dart';
+// ignore: unused_import
+import 'package:helloworld/widgets/stat_card.dart';
+// ignore: unused_import
+import '../../constants/breakpoints.dart';
+import '../../extensions/responsive_extensions.dart';
+import '../../utils/screen_size.dart';
+import '../../widgets/responsive/adaptive_scaffold.dart';
+import '../../widgets/responsive_card.dart' show ResponsiveCardM3;
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -25,496 +25,501 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  int _selectedIndex = 0;
   final AuthService _authService = AuthService();
-  List<BaseProduct> _products = [];
+  // ignore: unused_field
+  final ProductService _productService = ProductService();
+  
+  // Stats data
+  int _totalProducts = 0;
+  int _totalOrders = 0;
+  int _totalUsers = 0;
+  double _totalRevenue = 0.0;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadProducts();
+    _loadDashboardData();
   }
 
-  void _loadProducts() {
-    setState(() {
-      _products = ProductService.getAllProducts();
-    });
+  Future<void> _loadDashboardData() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final products = await ProductService.getAllProducts();
+      // Simulate data - replace with actual service calls
+      setState(() {
+        _totalProducts = products.length;
+        _totalOrders = 156; // From OrderService
+        _totalUsers = 234; // From UserService
+        _totalRevenue = 125000000.0;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading data: $e')),
+        );
+      }
+    }
+  }
+
+  List<Widget> get _screens => [
+    _buildDashboardHome(),
+    const ProductsScreen(),
+    const OrdersScreen(),
+    const UsersScreen(),
+    const AnalyticsScreen(),
+    const AdminProfileScreen(),
+  ];
+
+  Widget _buildDashboardHome() {
+    final screenSize = ScreenSize.of(context);
+    final isDesktop = screenSize == ScreenSizeType.desktop;
+    final isTablet = screenSize == ScreenSizeType.tablet;
+    
+    return RefreshIndicator(
+      onRefresh: _loadDashboardData,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(context.responsivePadding as double),
+        child: newMethod(isDesktop, isTablet),
+      ),
+    );
+  }
+
+  Column newMethod(bool isDesktop, bool isTablet) {
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Welcome Header
+          _buildWelcomeHeader(),
+          SizedBox(height: context.responsiveSpacing),
+          
+          // Stats Cards Grid
+          _buildStatsGrid(isDesktop, isTablet),
+          SizedBox(height: context.responsiveLargeSpacing),
+          
+          // Quick Actions
+          if (isDesktop || isTablet) ...[
+            _buildQuickActionsSection(),
+            SizedBox(height: context.responsiveLargeSpacing),
+          ],
+          
+          // Recent Activity
+          _buildRecentActivitySection(),
+        ],
+      );
+  }
+
+  Widget _buildWelcomeHeader() {
+    var responsiveFontSize2 = context.responsiveFontSize(24, mobile: null);
+    var responsiveFontSize = responsiveFontSize2;
+    var mobile = null;
+    return NewWidget(responsiveFontSize: responsiveFontSize, context: context, mobile: mobile);
+  }
+
+  Widget _buildStatsGrid(bool isDesktop, bool isTablet) {
+    final crossAxisCount = isDesktop ? 4 : (isTablet ? 2 : 1);
+    final childAspectRatio = isDesktop ? 1.5 : (isTablet ? 1.8 : 2.5);
+    
+    if (_isLoading) {
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: childAspectRatio,
+          crossAxisSpacing: context.responsiveSpacing,
+          mainAxisSpacing: context.responsiveSpacing,
+        ),
+        itemCount: 4,
+        itemBuilder: (context, index) => _buildLoadingStat(),
+      );
+    }
+
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: crossAxisCount,
+      childAspectRatio: childAspectRatio,
+      crossAxisSpacing: context.responsiveSpacing,
+      mainAxisSpacing: context.responsiveSpacing,
+      children: [
+        ResponsiveStatCard(
+          title: 'Total Products',
+          value: _totalProducts.toString(),
+          icon: Icons.inventory_2,
+          color: Colors.blue,
+          trend: '+12%',
+          onTap: () => _navigateToTab(1),
+        ),
+        ResponsiveStatCard(
+          title: 'Total Orders',
+          value: _totalOrders.toString(),
+          icon: Icons.shopping_cart,
+          color: Colors.green,
+          trend: '+8%',
+          onTap: () => _navigateToTab(2),
+        ),
+        ResponsiveStatCard(
+          title: 'Total Users',
+          value: _totalUsers.toString(),
+          icon: Icons.people,
+          color: Colors.orange,
+          trend: '+15%',
+          onTap: () => _navigateToTab(3),
+        ),
+        ResponsiveStatCard(
+          title: 'Revenue',
+          value: 'Rp ${(_totalRevenue / 1000000).toStringAsFixed(1)}M',
+          icon: Icons.attach_money,
+          color: Colors.purple,
+          trend: '+23%',
+          onTap: () => _navigateToTab(4),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingStat() {
+    return ResponsiveCardM3(
+      child: Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(
+            Theme.of(context).primaryColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection() {
+    var mobile = null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontSize: context.responsiveFontSize(20, mobile: mobile),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: context.responsiveSpacing),
+        Wrap(
+          spacing: context.responsiveSpacing,
+          runSpacing: context.responsiveSpacing,
+          children: [
+            _buildQuickActionCard(
+              'Add Product',
+              Icons.add_shopping_cart,
+              Colors.blue,
+              () => _navigateToTab(1),
+            ),
+            _buildQuickActionCard(
+              'View Orders',
+              Icons.list_alt,
+              Colors.green,
+              () => _navigateToTab(2),
+            ),
+            _buildQuickActionCard(
+              'Manage Users',
+              Icons.person_add,
+              Colors.orange,
+              () => _navigateToTab(3),
+            ),
+            _buildQuickActionCard(
+              'Analytics',
+              Icons.analytics,
+              Colors.purple,
+              () => _navigateToTab(4),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionCard(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    final isDesktop = ScreenSize.of(context) == ScreenSizeType.desktop;
+    
+    var mobile = null;
+    return SizedBox(
+      width: isDesktop ? 200 : null,
+      child: ResponsiveCardM3(
+        onTap: onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(context.responsiveSpacing),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: context.responsiveIconSize(32),
+              ),
+            ),
+            SizedBox(height: context.responsiveSmallSpacing),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: context.responsiveFontSize(14, mobile: mobile),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentActivitySection() {
+    var mobile = null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Recent Activity',
+          style: TextStyle(
+            fontSize: context.responsiveFontSize(20, mobile: mobile),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: context.responsiveSpacing),
+        ResponsiveCardM3(
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 5,
+            separatorBuilder: (context, index) => Divider(
+              height: context.responsiveSpacing * 2,
+            ),
+            itemBuilder: (context, index) {
+              var mobile = null;
+              var mobile2 = null;
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.primaries[index % Colors.primaries.length].withOpacity(0.1),
+                  child: Icon(
+                    _getActivityIcon(index),
+                    color: Colors.primaries[index % Colors.primaries.length],
+                    size: context.responsiveIconSize(20),
+                  ),
+                ),
+                title: Text(
+                  _getActivityTitle(index),
+                  style: TextStyle(fontSize: context.responsiveFontSize(14, mobile: mobile)),
+                ),
+                subtitle: Text(
+                  _getActivityTime(index),
+                  style: TextStyle(fontSize: context.responsiveFontSize(12, mobile: mobile2)),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  size: context.responsiveIconSize(16),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getActivityIcon(int index) {
+    final icons = [
+      Icons.shopping_bag,
+      Icons.person_add,
+      Icons.inventory_2,
+      Icons.star,
+      Icons.chat,
+    ];
+    return icons[index % icons.length];
+  }
+
+  String _getActivityTitle(int index) {
+    final titles = [
+      'New order #1234 received',
+      'New user registered',
+      'Product "Laptop Gaming" added',
+      '5 new reviews received',
+      'Customer message received',
+    ];
+    return titles[index % titles.length];
+  }
+
+  String _getActivityTime(int index) {
+    final times = [
+      '2 minutes ago',
+      '15 minutes ago',
+      '1 hour ago',
+      '3 hours ago',
+      'Yesterday',
+    ];
+    return times[index % times.length];
+  }
+
+  void _navigateToTab(int index) {
+    setState(() => _selectedIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFEFF6F9),
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  'assets/Logo.jpg',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.admin_panel_settings,
-                      size: 20,
-                      color: Colors.white,
-                    );
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text('MENTIS - Admin Dashboard'),
-          ],
+    return AdaptiveScaffold(
+      selectedIndex: _selectedIndex,
+      onDestinationSelected: (index) {
+        setState(() => _selectedIndex = index);
+      },
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: 'Dashboard',
         ),
-        backgroundColor: const Color(0xFF0D9488),
-        foregroundColor: Colors.white,
-        elevation: 0,
+        NavigationDestination(
+          icon: Icon(Icons.inventory_2_outlined),
+          selectedIcon: Icon(Icons.inventory_2),
+          label: 'Products',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.shopping_cart_outlined),
+          selectedIcon: Icon(Icons.shopping_cart),
+          label: 'Orders',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.people_outline),
+          selectedIcon: Icon(Icons.people),
+          label: 'Users',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.analytics_outlined),
+          selectedIcon: Icon(Icons.analytics),
+          label: 'Analytics',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person),
+          label: 'Profile',
+        ),
+      ],
+      body: _screens[_selectedIndex],
+      appBarTitle: _getAppBarTitle(),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          onPressed: () {
+            // TODO: Implement notifications
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () => _handleLogout(),
+        ),
+      ],
+    );
+  }
+
+  String _getAppBarTitle() {
+    final titles = [
+      'Admin Dashboard',
+      'Products Management',
+      'Orders Management',
+      'Users Management',
+      'Analytics',
+      'Admin Profile',
+    ];
+    return titles[_selectedIndex];
+  }
+
+  Future<void> _handleLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddProductScreen(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.add),
-            tooltip: 'Add Product',
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
           ),
-          IconButton(
-            onPressed: _showAdminMenu,
-            icon: const Icon(Icons.admin_panel_settings),
-            tooltip: 'Admin Menu',
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout'),
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 1024;
+    );
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(isDesktop ? 24 : 16),
+    if (shouldLogout == true && mounted) {
+      await _authService.signOut();
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+    }
+  }
+  
+  // ignore: non_constant_identifier_names
+  ResponsiveStatCard({required String title, required String value, required IconData icon, required MaterialColor color, required String trend, required void Function() onTap}) {}
+}
+
+class NewWidget extends StatelessWidget {
+  const NewWidget({
+    super.key,
+    required this.responsiveFontSize,
+    required this.context,
+    required this.mobile,
+  });
+
+  final double responsiveFontSize;
+  final BuildContext context;
+  final dynamic mobile;
+
+  @override
+  Widget build(BuildContext context) {
+    return ResponsiveCardM3(
+      child: Row(
+        children: [
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Banner
-                ResponsiveCard(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF0D9488), Color(0xFF1E293B)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Admin Dashboard',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Manage your digital store and monitor performance',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
+                Text(
+                  'Welcome Back, Admin!',
+                  style: TextStyle(
+                    fontSize: responsiveFontSize,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Stats
-                GridView.count(
-                  crossAxisCount: constraints.maxWidth > 800 ? 4 : 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.5,
-                  children: [
-                    StatCard(
-                      title: 'Total Sales',
-                      value: '\$2,450',
-                      icon: Icons.attach_money,
-                      color: const Color(0xFF10B981),
-                    ),
-                    StatCard(
-                      title: 'Orders',
-                      value: '142',
-                      icon: Icons.shopping_bag,
-                      color: const Color(0xFF3B82F6),
-                    ),
-                    StatCard(
-                      title: 'Products',
-                      value: '${_products.length}',
-                      icon: Icons.inventory,
-                      color: const Color(0xFF8B5CF6),
-                    ),
-                    StatCard(
-                      title: 'Users',
-                      value: '89',
-                      icon: Icons.people,
-                      color: const Color(0xFFEF4444),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 32),
-
-                // Quick Actions
-                ResponsiveCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Quick Actions',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      GridView.count(
-                        crossAxisCount: constraints.maxWidth > 600 ? 2 : 1,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 3,
-                        children: [
-                          _buildActionCard(
-                            'Add Product',
-                            'Create new digital product',
-                            Icons.add_box,
-                            const Color(0xFF0D9488),
-                            () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const AddProductScreen()),
-                              );
-                            },
-                          ),
-                          _buildActionCard(
-                            'View Orders',
-                            'Manage customer orders',
-                            Icons.list_alt,
-                            const Color(0xFF1E293B),
-                            () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const OrdersScreen()),
-                              );
-                            },
-                          ),
-                          _buildActionCard(
-                            'Manage Users',
-                            'View and manage users',
-                            Icons.people,
-                            const Color(0xFF7C3AED),
-                            () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const UsersScreen()),
-                              );
-                            },
-                          ),
-                          _buildActionCard(
-                            'Analytics',
-                            'View detailed reports',
-                            Icons.analytics,
-                            const Color(0xFFF97316),
-                            () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const AnalyticsScreen()),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Recent Products
-                ResponsiveCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Recent Products',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ProductsScreen()),
-                              );
-                            },
-                            child: const Text('View All'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _products.take(4).length,
-                        itemBuilder: (context, index) {
-                          final product = _products[index];
-                          return ProductCard(
-                            product: product,
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/product-detail',
-                                arguments: product,
-                              );
-                            },
-                            onEdit: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      AddProductScreen(product: product),
-                                ),
-                              );
-                            },
-                            onDelete: () {
-                              _showDeleteConfirmation(product);
-                            },
-                          );
-                        },
-                      ),
-                    ],
+                SizedBox(height: context.responsiveSmallSpacing),
+                Text(
+                  'Here\'s what\'s happening with your store today',
+                  style: TextStyle(
+                    fontSize: context.responsiveFontSize(14, mobile: mobile),
+                    color: Colors.grey[600],
                   ),
                 ),
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildActionCard(
-      String title, String subtitle, IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BaseProduct product) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: Text('Are you sure you want to delete "${product.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ProductService.deleteProduct(product.id);
-              _loadProducts();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Product deleted successfully!'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
+          if (ScreenSize.of(context) != ScreenSizeType.mobile)
+            Icon(
+              Icons.admin_panel_settings,
+              size: context.responsiveIconSize(48),
+              color: Theme.of(context).primaryColor,
+            ),
         ],
-      ),
-    );
-  }
-
-  void _showAdminMenu() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Admin Menu'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-             ListTile(
-            leading: const Icon(Icons.account_circle),
-            title: const Text('Admin Profile'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminProfileScreen(),
-                ),
-              );
-            },
-          ),
-          const Divider(),
-            ListTile(
-              leading: const Icon(Icons.inventory),
-              title: const Text('Manage Products'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ProductsScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.shopping_bag),
-              title: const Text('Manage Orders'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const OrdersScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.people),
-              title: const Text('Manage Users'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const UsersScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.analytics),
-              title: const Text('Analytics'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const AnalyticsScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const SettingsScreen()),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () async {
-                Navigator.pop(context);
-                await _authService.signOut();
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-            ),
-          ],
-        ),
       ),
     );
   }
