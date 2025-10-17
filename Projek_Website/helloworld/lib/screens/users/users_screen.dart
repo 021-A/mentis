@@ -2,6 +2,7 @@
 // ignore_for_file: deprecated_member_use, avoid_init_to_null, duplicate_ignore, unused_local_variable
 
 import 'package:flutter/material.dart';
+// ignore: unused_import
 import 'package:helloworld/screens/analytics/analytics_screen.dart';
 import 'package:intl/intl.dart';
 import '../../extensions/responsive_extensions.dart';

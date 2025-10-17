@@ -178,10 +178,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   Widget build(BuildContext context) {
     final screenSize = ScreenSize.of(context);
-    final isDesktop = screenSize == ScreenSizeType.desktop;
-    final isTablet = screenSize == ScreenSizeType.tablet;
-    final isMobile = screenSize == ScreenSizeType.mobile;
-    final filteredProducts = _filteredProducts;
+// gunakan properti boolean yang benar dari ScreenSize
+final isDesktop = screenSize.isDesktop;
+final isTablet = screenSize.isTablet;
+final isMobile = screenSize.isMobile;
+
+final filteredProducts = _filteredProducts;
+
 
     return Scaffold(
       body: Column(

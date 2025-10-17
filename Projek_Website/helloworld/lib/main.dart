@@ -11,11 +11,10 @@ import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/dashboard/user_dashboard_screen.dart';
 import 'screens/dashboard/admin_dashboard_screen.dart';
 import 'screens/products/add_product_screen.dart';
-// ignore: unused_import
-import 'screens/products/products_screen.dart' hide ProductsScreen;
+import 'screens/products/products_screen.dart';
 import 'screens/orders/orders_screen.dart';
 import 'screens/users/users_screen.dart';
-import 'screens/analytics/analytics_screen.dart';
+import 'screens/analytics/analytics_screen.dart' as analytics;
 import 'screens/dashboard/settings_screen.dart';
 import 'screens/detail/product_detail_screen.dart';
 import 'models/product.dart';
@@ -77,8 +76,10 @@ class MentisApp extends StatelessWidget {
         '/orders': (context) => const OrdersScreen(),
         '/users': (context) => const UsersScreen(),
         '/analytics': (context) {
-          const analyticsScreen = const AnalyticsScreen();
-          return analyticsScreen;
+          // Deteksi apakah mobile berdasarkan screen width
+          final width = MediaQuery.of(context).size.width;
+          final isMobile = width < 768;
+          return analytics.AnalyticsScreen(mobile: isMobile);
         },
         '/settings': (context) => const SettingsScreen(),
       },
@@ -109,10 +110,6 @@ class MentisApp extends StatelessWidget {
       scrollBehavior: const ResponsiveScrollBehavior(),
     );
   }
-}
-
-class AnalyticsScreen {
-  const AnalyticsScreen();
 }
 
 // ============================================

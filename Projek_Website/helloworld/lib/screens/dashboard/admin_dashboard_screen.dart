@@ -4,18 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:helloworld/screens/dashboard/admin_profile_screen.dart' show AdminProfileScreen;
 import 'package:helloworld/screens/analytics/analytics_screen.dart';
 import 'package:helloworld/screens/orders/orders_screen.dart';
-import 'package:helloworld/screens/products/products_screen.dart';
+import 'package:helloworld/screens/products/products_screen.dart' as products_screen;
 import 'package:helloworld/screens/users/users_screen.dart';
 import 'package:helloworld/services/auth_service.dart';
 import 'package:helloworld/services/product_service.dart';
-// ignore: unused_import
 import 'package:helloworld/widgets/stat_card.dart';
-// ignore: unused_import
-import '../../constants/breakpoints.dart';
 import '../../extensions/responsive_extensions.dart';
 import '../../utils/screen_size.dart';
 import '../../widgets/responsive/adaptive_scaffold.dart';
 import '../../widgets/responsive_card.dart' show ResponsiveCardM3;
+
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -27,8 +25,6 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
   final AuthService _authService = AuthService();
-  // ignore: unused_field
-  final ProductService _productService = ProductService();
   
   // Stats data
   int _totalProducts = 0;
@@ -47,7 +43,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final products = await ProductService.getAllProducts();
+      final products = ProductService.getAllProducts();
       // Simulate data - replace with actual service calls
       setState(() {
         _totalProducts = products.length;
@@ -66,63 +62,103 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  List<Widget> get _screens => [
-    _buildDashboardHome(),
-    const ProductsScreen(),
-    const OrdersScreen(),
-    const UsersScreen(),
-    const AnalyticsScreen(),
-    const AdminProfileScreen(),
-  ];
+  List<Widget> _buildScreens() {
+    final screenSize = ScreenSize.of(context);
+    final isMobile = screenSize.isMobile;
+    
+    return [
+      _buildDashboardHome(),
+      const products_screen.ProductsScreen(),
+      const OrdersScreen(),
+      const UsersScreen(),
+      AnalyticsScreen(mobile: isMobile),
+      const AdminProfileScreen(),
+    ];
+  }
 
   Widget _buildDashboardHome() {
     final screenSize = ScreenSize.of(context);
-    final isDesktop = screenSize == ScreenSizeType.desktop;
-    final isTablet = screenSize == ScreenSizeType.tablet;
+    final isDesktop = screenSize.isDesktop;
+    final isTablet = screenSize.isTablet;
     
     return RefreshIndicator(
       onRefresh: _loadDashboardData,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(context.responsivePadding as double),
-        child: newMethod(isDesktop, isTablet),
+        padding: context.responsivePadding,
+        child: _buildDashboardContent(isDesktop, isTablet),
       ),
     );
   }
 
-  Column newMethod(bool isDesktop, bool isTablet) {
+  Widget _buildDashboardContent(bool isDesktop, bool isTablet) {
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Welcome Header
-          _buildWelcomeHeader(),
-          SizedBox(height: context.responsiveSpacing),
-          
-          // Stats Cards Grid
-          _buildStatsGrid(isDesktop, isTablet),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Welcome Header
+        _buildWelcomeHeader(),
+        SizedBox(height: context.responsiveSpacing),
+        
+        // Stats Cards Grid
+        _buildStatsGrid(isDesktop, isTablet),
+        SizedBox(height: context.responsiveLargeSpacing),
+        
+        // Quick Actions
+        if (isDesktop || isTablet) ...[
+          _buildQuickActionsSection(),
           SizedBox(height: context.responsiveLargeSpacing),
-          
-          // Quick Actions
-          if (isDesktop || isTablet) ...[
-            _buildQuickActionsSection(),
-            SizedBox(height: context.responsiveLargeSpacing),
-          ],
-          
-          // Recent Activity
-          _buildRecentActivitySection(),
         ],
-      );
+        
+        // Recent Activity
+        _buildRecentActivitySection(),
+      ],
+    );
   }
 
   Widget _buildWelcomeHeader() {
-    var responsiveFontSize2 = context.responsiveFontSize(24, mobile: null);
-    var responsiveFontSize = responsiveFontSize2;
-    var mobile = null;
-    return NewWidget(responsiveFontSize: responsiveFontSize, context: context, mobile: mobile);
+    final screenSize = ScreenSize.of(context);
+    final isMobile = screenSize.isMobile;
+    
+    return ResponsiveCardM3(
+      mobile: isMobile,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome Back, Admin!',
+                  style: TextStyle(
+                    fontSize: context.responsiveFontSize(24),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: context.responsiveSmallSpacing),
+                Text(
+                  'Here\'s what\'s happening with your store today',
+                  style: TextStyle(
+                    fontSize: context.responsiveFontSize(14),
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!isMobile)
+            Icon(
+              Icons.admin_panel_settings,
+              size: context.responsiveIconSize(48),
+              color: Theme.of(context).primaryColor,
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildStatsGrid(bool isDesktop, bool isTablet) {
     final crossAxisCount = isDesktop ? 4 : (isTablet ? 2 : 1);
     final childAspectRatio = isDesktop ? 1.5 : (isTablet ? 1.8 : 2.5);
+    final isMobile = ScreenSize.of(context).isMobile;
     
     if (_isLoading) {
       return GridView.builder(
@@ -147,44 +183,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       crossAxisSpacing: context.responsiveSpacing,
       mainAxisSpacing: context.responsiveSpacing,
       children: [
-        ResponsiveStatCard(
+        StatCard(
           title: 'Total Products',
           value: _totalProducts.toString(),
           icon: Icons.inventory_2,
           color: Colors.blue,
-          trend: '+12%',
-          onTap: () => _navigateToTab(1),
+          mobile: isMobile,
         ),
-        ResponsiveStatCard(
+        StatCard(
           title: 'Total Orders',
           value: _totalOrders.toString(),
           icon: Icons.shopping_cart,
           color: Colors.green,
-          trend: '+8%',
-          onTap: () => _navigateToTab(2),
+          mobile: isMobile,
         ),
-        ResponsiveStatCard(
+        StatCard(
           title: 'Total Users',
           value: _totalUsers.toString(),
           icon: Icons.people,
           color: Colors.orange,
-          trend: '+15%',
-          onTap: () => _navigateToTab(3),
+          mobile: isMobile,
         ),
-        ResponsiveStatCard(
+        StatCard(
           title: 'Revenue',
           value: 'Rp ${(_totalRevenue / 1000000).toStringAsFixed(1)}M',
           icon: Icons.attach_money,
           color: Colors.purple,
-          trend: '+23%',
-          onTap: () => _navigateToTab(4),
+          mobile: isMobile,
         ),
       ],
     );
   }
 
   Widget _buildLoadingStat() {
+    final isMobile = ScreenSize.of(context).isMobile;
     return ResponsiveCardM3(
+      mobile: isMobile,
       child: Center(
         child: CircularProgressIndicator(
           strokeWidth: 2,
@@ -197,14 +231,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildQuickActionsSection() {
-    var mobile = null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Quick Actions',
           style: TextStyle(
-            fontSize: context.responsiveFontSize(20, mobile: mobile),
+            fontSize: context.responsiveFontSize(20),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -249,12 +282,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Color color,
     VoidCallback onTap,
   ) {
-    final isDesktop = ScreenSize.of(context) == ScreenSizeType.desktop;
+    final screenSize = ScreenSize.of(context);
+    final isDesktop = screenSize.isDesktop;
+    final isMobile = screenSize.isMobile;
     
-    var mobile = null;
     return SizedBox(
       width: isDesktop ? 200 : null,
       child: ResponsiveCardM3(
+        mobile: isMobile,
         onTap: onTap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -275,7 +310,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Text(
               title,
               style: TextStyle(
-                fontSize: context.responsiveFontSize(14, mobile: mobile),
+                fontSize: context.responsiveFontSize(14),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -286,19 +321,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildRecentActivitySection() {
-    var mobile = null;
+    final isMobile = ScreenSize.of(context).isMobile;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Recent Activity',
           style: TextStyle(
-            fontSize: context.responsiveFontSize(20, mobile: mobile),
+            fontSize: context.responsiveFontSize(20),
             fontWeight: FontWeight.bold,
           ),
         ),
         SizedBox(height: context.responsiveSpacing),
         ResponsiveCardM3(
+          mobile: isMobile,
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -307,8 +343,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               height: context.responsiveSpacing * 2,
             ),
             itemBuilder: (context, index) {
-              var mobile = null;
-              var mobile2 = null;
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: Colors.primaries[index % Colors.primaries.length].withOpacity(0.1),
@@ -320,11 +354,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 title: Text(
                   _getActivityTitle(index),
-                  style: TextStyle(fontSize: context.responsiveFontSize(14, mobile: mobile)),
+                  style: TextStyle(fontSize: context.responsiveFontSize(14)),
                 ),
                 subtitle: Text(
                   _getActivityTime(index),
-                  style: TextStyle(fontSize: context.responsiveFontSize(12, mobile: mobile2)),
+                  style: TextStyle(fontSize: context.responsiveFontSize(12)),
                 ),
                 trailing: Icon(
                   Icons.arrow_forward_ios,
@@ -377,6 +411,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screens = _buildScreens();
+    
     return AdaptiveScaffold(
       selectedIndex: _selectedIndex,
       onDestinationSelected: (index) {
@@ -414,7 +450,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           label: 'Profile',
         ),
       ],
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
       appBarTitle: _getAppBarTitle(),
       actions: [
         IconButton(
@@ -468,59 +504,5 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         Navigator.of(context).pushReplacementNamed('/login');
       }
     }
-  }
-  
-  // ignore: non_constant_identifier_names
-  ResponsiveStatCard({required String title, required String value, required IconData icon, required MaterialColor color, required String trend, required void Function() onTap}) {}
-}
-
-class NewWidget extends StatelessWidget {
-  const NewWidget({
-    super.key,
-    required this.responsiveFontSize,
-    required this.context,
-    required this.mobile,
-  });
-
-  final double responsiveFontSize;
-  final BuildContext context;
-  final dynamic mobile;
-
-  @override
-  Widget build(BuildContext context) {
-    return ResponsiveCardM3(
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome Back, Admin!',
-                  style: TextStyle(
-                    fontSize: responsiveFontSize,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: context.responsiveSmallSpacing),
-                Text(
-                  'Here\'s what\'s happening with your store today',
-                  style: TextStyle(
-                    fontSize: context.responsiveFontSize(14, mobile: mobile),
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (ScreenSize.of(context) != ScreenSizeType.mobile)
-            Icon(
-              Icons.admin_panel_settings,
-              size: context.responsiveIconSize(48),
-              color: Theme.of(context).primaryColor,
-            ),
-        ],
-      ),
-    );
   }
 }

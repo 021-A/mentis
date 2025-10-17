@@ -12,6 +12,9 @@ import '../../widgets/product_card.dart';
 import '../../widgets/responsive_card.dart';
 import '../../extensions/responsive_extensions.dart';
 import '../../widgets/responsive/responsive_layout.dart';
+// ignore: unused_import
+import 'package:helloworld/utils/screen_size.dart';
+
 
 class UserDashboardScreen extends StatefulWidget {
   const UserDashboardScreen({super.key});
