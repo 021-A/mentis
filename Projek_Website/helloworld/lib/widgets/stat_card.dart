@@ -1,6 +1,4 @@
 // lib/widgets/stat_card.dart
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import '../extensions/responsive_extensions.dart';
 
@@ -14,6 +12,7 @@ class StatCard extends StatelessWidget {
   final bool isPositiveTrend;
   final VoidCallback? onTap;
   final bool showTrendIcon;
+  final bool mobile; // <--- tambahan parameter
 
   const StatCard({
     super.key,
@@ -26,18 +25,15 @@ class StatCard extends StatelessWidget {
     this.isPositiveTrend = true,
     this.onTap,
     this.showTrendIcon = false,
+    this.mobile = false, // default false
   });
 
   @override
   Widget build(BuildContext context) {
     final screen = context.screen;
-    
+
     return Card(
-      elevation: screen.responsive(
-        mobile: 2,
-        tablet: 2,
-        desktop: 3,
-      ),
+      elevation: screen.responsive(mobile: 2, tablet: 2, desktop: 3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(
           screen.responsive(mobile: 12, tablet: 14, desktop: 16),
@@ -76,11 +72,7 @@ class StatCard extends StatelessWidget {
                   Icon(
                     icon,
                     color: color,
-                    size: screen.responsive(
-                      mobile: 20,
-                      tablet: 22,
-                      desktop: 24,
-                    ),
+                    size: screen.responsive(mobile: 20, tablet: 22, desktop: 24),
                   ),
                   Container(
                     padding: EdgeInsets.all(
@@ -93,29 +85,18 @@ class StatCard extends StatelessWidget {
                     child: Icon(
                       icon,
                       color: color,
-                      size: screen.responsive(
-                        mobile: 14,
-                        tablet: 15,
-                        desktop: 16,
-                      ),
+                      size: screen.responsive(mobile: 14, tablet: 15, desktop: 16),
                     ),
                   ),
                 ],
               ),
-              
-              SizedBox(
-                height: screen.responsive(mobile: 12, tablet: 14, desktop: 16),
-              ),
+              SizedBox(height: screen.responsive(mobile: 12, tablet: 14, desktop: 16)),
               
               // Value
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: screen.responsive(
-                    mobile: 22,
-                    tablet: 26,
-                    desktop: 28,
-                  ),
+                  fontSize: screen.responsive(mobile: 22, tablet: 26, desktop: 28),
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -123,19 +104,13 @@ class StatCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               
-              SizedBox(
-                height: screen.responsive(mobile: 6, tablet: 7, desktop: 8),
-              ),
+              SizedBox(height: screen.responsive(mobile: 6, tablet: 7, desktop: 8)),
               
               // Title
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: screen.responsive(
-                    mobile: 13,
-                    tablet: 13.5,
-                    desktop: 14,
-                  ),
+                  fontSize: screen.responsive(mobile: 13, tablet: 13.5, desktop: 14),
                   fontWeight: FontWeight.w500,
                   color: Colors.grey.shade600,
                 ),
@@ -145,9 +120,7 @@ class StatCard extends StatelessWidget {
               
               // Subtitle and Trend
               if (subtitle != null || trend != null) ...[
-                SizedBox(
-                  height: screen.responsive(mobile: 6, tablet: 7, desktop: 8),
-                ),
+                SizedBox(height: screen.responsive(mobile: 6, tablet: 7, desktop: 8)),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -156,11 +129,7 @@ class StatCard extends StatelessWidget {
                         child: Text(
                           subtitle!,
                           style: TextStyle(
-                            fontSize: screen.responsive(
-                              mobile: 11,
-                              tablet: 11.5,
-                              desktop: 12,
-                            ),
+                            fontSize: screen.responsive(mobile: 11, tablet: 11.5, desktop: 12),
                             color: Colors.grey.shade500,
                           ),
                           maxLines: 1,
@@ -172,31 +141,17 @@ class StatCard extends StatelessWidget {
                         children: [
                           if (showTrendIcon)
                             Icon(
-                              isPositiveTrend
-                                  ? Icons.trending_up
-                                  : Icons.trending_down,
-                              size: screen.responsive(
-                                mobile: 14,
-                                tablet: 15,
-                                desktop: 16,
-                              ),
-                              color: isPositiveTrend
-                                  ? Colors.green
-                                  : Colors.red,
+                              isPositiveTrend ? Icons.trending_up : Icons.trending_down,
+                              size: screen.responsive(mobile: 14, tablet: 15, desktop: 16),
+                              color: isPositiveTrend ? Colors.green : Colors.red,
                             ),
                           if (showTrendIcon) const SizedBox(width: 4),
                           Text(
                             trend!,
                             style: TextStyle(
-                              fontSize: screen.responsive(
-                                mobile: 11,
-                                tablet: 11.5,
-                                desktop: 12,
-                              ),
+                              fontSize: screen.responsive(mobile: 11, tablet: 11.5, desktop: 12),
                               fontWeight: FontWeight.w600,
-                              color: isPositiveTrend
-                                  ? Colors.green
-                                  : Colors.red,
+                              color: isPositiveTrend ? Colors.green : Colors.red,
                             ),
                           ),
                         ],
@@ -212,13 +167,14 @@ class StatCard extends StatelessWidget {
   }
 }
 
-// Variant untuk StatCard yang lebih compact (Responsive)
+// Compact Variant
 class CompactStatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
   final Color color;
   final VoidCallback? onTap;
+  final bool mobile;
 
   const CompactStatCard({
     super.key,
@@ -227,12 +183,13 @@ class CompactStatCard extends StatelessWidget {
     required this.icon,
     required this.color,
     this.onTap,
+    this.mobile = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final screen = context.screen;
-    
+
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
@@ -262,16 +219,10 @@ class CompactStatCard extends StatelessWidget {
                 child: Icon(
                   icon,
                   color: color,
-                  size: screen.responsive(
-                    mobile: 18,
-                    tablet: 19,
-                    desktop: 20,
-                  ),
+                  size: screen.responsive(mobile: 18, tablet: 19, desktop: 20),
                 ),
               ),
-              SizedBox(
-                width: screen.responsive(mobile: 12, tablet: 14, desktop: 16),
-              ),
+              SizedBox(width: screen.responsive(mobile: 12, tablet: 14, desktop: 16)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,28 +230,18 @@ class CompactStatCard extends StatelessWidget {
                     Text(
                       value,
                       style: TextStyle(
-                        fontSize: screen.responsive(
-                          mobile: 18,
-                          tablet: 19,
-                          desktop: 20,
-                        ),
+                        fontSize: screen.responsive(mobile: 18, tablet: 19, desktop: 20),
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(
-                      height: screen.responsive(mobile: 3, tablet: 3.5, desktop: 4),
-                    ),
+                    SizedBox(height: screen.responsive(mobile: 3, tablet: 3.5, desktop: 4)),
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: screen.responsive(
-                          mobile: 13,
-                          tablet: 13.5,
-                          desktop: 14,
-                        ),
+                        fontSize: screen.responsive(mobile: 13, tablet: 13.5, desktop: 14),
                         color: Colors.grey.shade600,
                       ),
                       maxLines: 1,
@@ -317,13 +258,14 @@ class CompactStatCard extends StatelessWidget {
   }
 }
 
-// Variant untuk StatCard Horizontal (Desktop optimized)
+// Horizontal Variant
 class HorizontalStatCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
   final Color color;
   final VoidCallback? onTap;
+  final bool mobile;
 
   const HorizontalStatCard({
     super.key,
@@ -332,12 +274,13 @@ class HorizontalStatCard extends StatelessWidget {
     required this.icon,
     required this.color,
     this.onTap,
+    this.mobile = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final screen = context.screen;
-    
+
     return Card(
       elevation: 2,
       child: InkWell(
@@ -349,7 +292,6 @@ class HorizontalStatCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Icon Container
               Container(
                 padding: EdgeInsets.all(
                   screen.responsive(mobile: 12, tablet: 14, desktop: 16),
@@ -361,17 +303,10 @@ class HorizontalStatCard extends StatelessWidget {
                 child: Icon(
                   icon,
                   color: color,
-                  size: screen.responsive(
-                    mobile: 24,
-                    tablet: 28,
-                    desktop: 32,
-                  ),
+                  size: screen.responsive(mobile: 24, tablet: 28, desktop: 32),
                 ),
               ),
-              SizedBox(
-                width: screen.responsive(mobile: 16, tablet: 20, desktop: 24),
-              ),
-              // Content
+              SizedBox(width: screen.responsive(mobile: 16, tablet: 20, desktop: 24)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,26 +314,16 @@ class HorizontalStatCard extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: screen.responsive(
-                          mobile: 13,
-                          tablet: 14,
-                          desktop: 14,
-                        ),
+                        fontSize: screen.responsive(mobile: 13, tablet: 14, desktop: 14),
                         color: Colors.grey.shade600,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(
-                      height: screen.responsive(mobile: 4, tablet: 6, desktop: 8),
-                    ),
+                    SizedBox(height: screen.responsive(mobile: 4, tablet: 6, desktop: 8)),
                     Text(
                       value,
                       style: TextStyle(
-                        fontSize: screen.responsive(
-                          mobile: 20,
-                          tablet: 24,
-                          desktop: 28,
-                        ),
+                        fontSize: screen.responsive(mobile: 20, tablet: 24, desktop: 28),
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
