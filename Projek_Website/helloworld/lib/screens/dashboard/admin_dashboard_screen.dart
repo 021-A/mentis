@@ -14,7 +14,6 @@ import '../../utils/screen_size.dart';
 import '../../widgets/responsive/adaptive_scaffold.dart';
 import '../../widgets/responsive_card.dart' show ResponsiveCardM3;
 
-
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -43,12 +42,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final products = ProductService.getAllProducts();
-      // Simulate data - replace with actual service calls
+      final products = await ProductService.getAllProducts(); // async corrected
       setState(() {
         _totalProducts = products.length;
-        _totalOrders = 156; // From OrderService
-        _totalUsers = 234; // From UserService
+        _totalOrders = 156; // Example, replace with OrderService
+        _totalUsers = 234; // Example, replace with UserService
         _totalRevenue = 125000000.0;
         _isLoading = false;
       });
@@ -65,7 +63,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   List<Widget> _buildScreens() {
     final screenSize = ScreenSize.of(context);
     final isMobile = screenSize.isMobile;
-    
+
     return [
       _buildDashboardHome(),
       const products_screen.ProductsScreen(),
@@ -80,7 +78,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final screenSize = ScreenSize.of(context);
     final isDesktop = screenSize.isDesktop;
     final isTablet = screenSize.isTablet;
-    
+
     return RefreshIndicator(
       onRefresh: _loadDashboardData,
       child: SingleChildScrollView(
@@ -94,21 +92,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Welcome Header
         _buildWelcomeHeader(),
         SizedBox(height: context.responsiveSpacing),
-        
-        // Stats Cards Grid
         _buildStatsGrid(isDesktop, isTablet),
         SizedBox(height: context.responsiveLargeSpacing),
-        
-        // Quick Actions
         if (isDesktop || isTablet) ...[
           _buildQuickActionsSection(),
           SizedBox(height: context.responsiveLargeSpacing),
         ],
-        
-        // Recent Activity
         _buildRecentActivitySection(),
       ],
     );
@@ -117,7 +108,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildWelcomeHeader() {
     final screenSize = ScreenSize.of(context);
     final isMobile = screenSize.isMobile;
-    
+
     return ResponsiveCardM3(
       mobile: isMobile,
       child: Row(
@@ -159,7 +150,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final crossAxisCount = isDesktop ? 4 : (isTablet ? 2 : 1);
     final childAspectRatio = isDesktop ? 1.5 : (isTablet ? 1.8 : 2.5);
     final isMobile = ScreenSize.of(context).isMobile;
-    
+
     if (_isLoading) {
       return GridView.builder(
         shrinkWrap: true,
@@ -285,9 +276,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final screenSize = ScreenSize.of(context);
     final isDesktop = screenSize.isDesktop;
     final isMobile = screenSize.isMobile;
-    
+    final maxWidth = isDesktop ? 200.0 : 160.0;
+
     return SizedBox(
-      width: isDesktop ? 200 : null,
+      width: maxWidth,
       child: ResponsiveCardM3(
         mobile: isMobile,
         onTap: onTap,
@@ -313,6 +305,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 fontSize: context.responsiveFontSize(14),
                 fontWeight: FontWeight.w600,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -373,7 +366,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   IconData _getActivityIcon(int index) {
-    final icons = [
+    const icons = [
       Icons.shopping_bag,
       Icons.person_add,
       Icons.inventory_2,
@@ -384,7 +377,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   String _getActivityTitle(int index) {
-    final titles = [
+    const titles = [
       'New order #1234 received',
       'New user registered',
       'Product "Laptop Gaming" added',
@@ -395,7 +388,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   String _getActivityTime(int index) {
-    final times = [
+    const times = [
       '2 minutes ago',
       '15 minutes ago',
       '1 hour ago',
@@ -415,9 +408,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     
     return AdaptiveScaffold(
       selectedIndex: _selectedIndex,
-      onDestinationSelected: (index) {
-        setState(() => _selectedIndex = index);
-      },
+      onDestinationSelected: (index) => setState(() => _selectedIndex = index),
       destinations: const [
         NavigationDestination(
           icon: Icon(Icons.dashboard_outlined),
@@ -455,20 +446,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            // TODO: Implement notifications
-          },
+          onPressed: () {},
         ),
         IconButton(
           icon: const Icon(Icons.logout),
-          onPressed: () => _handleLogout(),
+          onPressed: _handleLogout,
         ),
       ],
     );
   }
 
   String _getAppBarTitle() {
-    final titles = [
+    const titles = [
       'Admin Dashboard',
       'Products Management',
       'Orders Management',
@@ -500,9 +489,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     if (shouldLogout == true && mounted) {
       await _authService.signOut();
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/login');
-      }
+      if (mounted) Navigator.of(context).pushReplacementNamed('/login');
     }
   }
 }
