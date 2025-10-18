@@ -219,7 +219,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             )
           : null,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd ?? 12.0),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
       filled: true,
       fillColor: Colors.grey[100],
