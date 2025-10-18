@@ -6,9 +6,10 @@ class AppSpacing {
   // Base spacing unit
   static const double unit = 8.0;
 
-  static double? get radiusMd => null;
-
-  static double? get radiusSm => null;
+  static const double radiusSm = 4.0;
+  static const double radiusMd = 8.0;
+  static const double radiusLg = 12.0;
+  static const double radiusXl = 16.0;
   
   // Responsive spacing
   static double xs(BuildContext context) => 

@@ -1,5 +1,5 @@
 // lib/screens/users/users_screen.dart
-// ignore_for_file: deprecated_member_use, avoid_init_to_null, duplicate_ignore, unused_local_variable, unrelated_type_equality_checks
+// ignore_for_file: deprecated_member_use, avoid_init_to_null, duplicate_ignore, unused_local_variable, unrelated_type_equality_checks, unnecessary_cast
 
 import 'package:flutter/material.dart';
 // ignore: unused_import
@@ -266,6 +266,18 @@ class _UsersScreenState extends State<UsersScreen> {
     );
   }
 
+    double _getSpacing(dynamic value) {
+      return (value as double?) ?? 12.0;
+  }
+
+    EdgeInsets _getPadding(dynamic value) {
+      return (value as EdgeInsets?) ?? const EdgeInsets.all(12.0);
+  }
+
+    double _getIconSize(dynamic value, double defaultSize) {
+      return (value as double?) ?? defaultSize;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = ScreenSize.of(context);
@@ -273,8 +285,7 @@ class _UsersScreenState extends State<UsersScreen> {
     final isTablet = screenSize == ScreenSizeType.tablet;
     final isMobile = screenSize == ScreenSizeType.mobile;
     final filtered = _filteredUsers;
-
-    final padding = context.responsivePadding as EdgeInsets;
+    final padding = _getPadding(context.responsivePadding);
 
     return Scaffold(
       body: Column(
@@ -313,7 +324,7 @@ class _UsersScreenState extends State<UsersScreen> {
             ),
           ),
 
-          SizedBox(height: context.responsiveSpacing as double),
+          SizedBox(height: _getSpacing(context.responsiveSpacing)),
 
           // List
           Expanded(
@@ -334,9 +345,9 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildHeader(bool isDesktop, bool isTablet, bool isMobile) {
-    final padding = context.responsivePadding as EdgeInsets;
-    final spacing = context.responsiveSpacing as double;
-    final smallSpacing = context.responsiveSmallSpacing as double;
+    final padding = _getPadding(context.responsivePadding);
+    final spacing = _getSpacing(context.responsiveSpacing);
+    final smallSpacing = _getSpacing(context.responsiveSmallSpacing);
 
     return Container(
       padding: padding,
@@ -419,12 +430,9 @@ class _UsersScreenState extends State<UsersScreen> {
     final activeUsers = _users.where((u) => u.isActive).length;
     final adminUsers = _users.where((u) => u.role == 'admin').length;
     final totalRevenue = _users.fold<double>(0, (sum, u) => sum + u.totalSpent);
-
     final crossAxisCount = isDesktop ? 4 : (isTablet ? 2 : 2);
-    final paddingValue = context.responsivePadding;
-    final padding = paddingValue is EdgeInsets ? paddingValue : const EdgeInsets.all(12.0);
-    final smallSpacingValue = context.responsiveSmallSpacing;
-    final smallSpacing = smallSpacingValue is double ? smallSpacingValue : 8.0;
+    final padding = _getPadding(context.responsivePadding);
+    final smallSpacing = _getSpacing(context.responsiveSmallSpacing);
 
     return Padding(
       padding: padding,
@@ -432,7 +440,7 @@ class _UsersScreenState extends State<UsersScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: crossAxisCount,
-        childAspectRatio: isDesktop ? 2.5 : 2,
+        childAspectRatio: isDesktop ? 2.5 : 2.0,
         crossAxisSpacing: smallSpacing,
         mainAxisSpacing: smallSpacing,
         children: [
@@ -466,10 +474,8 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    final smallSpacingValue = context.responsiveSmallSpacing;
-    final smallSpacing = smallSpacingValue is double ? smallSpacingValue : 8.0;
-    final iconSizeValue = context.responsiveIconSize(20);
-    final iconSize = iconSizeValue is double ? iconSizeValue : 20.0;
+    final smallSpacing = _getSpacing(context.responsiveSmallSpacing);
+    final iconSize = _getIconSize(context.responsiveIconSize(20), 20.0);
 
     return ResponsiveCardM3(
       child: Row(
@@ -515,9 +521,9 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildFilters() {
-    final spacing = context.responsiveSpacing as double;
-    final padding = context.responsivePadding as EdgeInsets;
-    final smallSpacing = context.responsiveSmallSpacing as double;
+    final spacing = _getSpacing(context.responsiveSpacing);
+    final padding = _getPadding(context.responsivePadding);
+    final smallSpacing = _getSpacing(context.responsiveSmallSpacing);
 
     return Container(
       height: 60,
@@ -571,8 +577,8 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildListView(List<UserEntry> users) {
-    final padding = context.responsivePadding as EdgeInsets;
-    final smallSpacing = context.responsiveSmallSpacing as double;
+    final padding = _getPadding(context.responsivePadding);
+    final smallSpacing = _getSpacing(context.responsiveSmallSpacing);
 
     return ListView.builder(
       padding: EdgeInsets.symmetric(
@@ -585,14 +591,13 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildGridView(List<UserEntry> users, bool isDesktop, bool isTablet) {
-    final crossAxisCount = isDesktop ? 3 : 2;
-    final padding = context.responsivePadding as EdgeInsets;
-    final spacing = context.responsiveSpacing as double;
+    final padding = _getPadding(context.responsivePadding);
+    final spacing = _getSpacing(context.responsiveSpacing);
 
     return GridView.builder(
       padding: padding,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
+        crossAxisCount: isDesktop ? 3 : 2,
         childAspectRatio: isDesktop ? 1.2 : 0.9,
         crossAxisSpacing: spacing,
         mainAxisSpacing: spacing,
@@ -610,9 +615,9 @@ class _UsersScreenState extends State<UsersScreen> {
       decimalDigits: 0,
     );
 
-    final spacing = context.responsiveSpacing as double;
-    final smallSpacing = context.responsiveSmallSpacing as double;
-    final iconSize = context.responsiveIconSize(12) as double;
+    final spacing = _getSpacing(context.responsiveSpacing);
+    final smallSpacing = _getSpacing(context.responsiveSmallSpacing);
+    final iconSize = _getIconSize(context.responsiveIconSize(12), 12.0);
 
     return ResponsiveCardM3(
       margin: EdgeInsets.only(bottom: spacing),
@@ -749,7 +754,7 @@ class _UsersScreenState extends State<UsersScreen> {
       decimalDigits: 0,
     );
 
-    final smallSpacing = context.responsiveSmallSpacing as double;
+    final smallSpacing = _getSpacing(context.responsiveSmallSpacing);
 
     return ResponsiveCardM3(
       onTap: () => _openDetail(user),
@@ -901,10 +906,10 @@ class _UsersScreenState extends State<UsersScreen> {
   }
 
   Widget _buildEmptyState(bool isMobile) {
-    final spacing = context.responsiveSpacing as double;
-    final smallSpacing = context.responsiveSmallSpacing as double;
-    final largeSpacing = context.responsiveLargeSpacing as double;
-    final iconSize = context.responsiveIconSize(80) as double;
+    final spacing = _getSpacing(context.responsiveSpacing);
+    final smallSpacing = _getSpacing(context.responsiveSmallSpacing);
+    final largeSpacing = _getSpacing(context.responsiveLargeSpacing);
+    final iconSize = _getIconSize(context.responsiveIconSize(80), 80.0);
 
     return Center(
       child: Column(
@@ -964,10 +969,10 @@ class UserDetailScreen extends StatelessWidget {
       decimalDigits: 0,
     );
 
-    final padding = context.responsivePadding as EdgeInsets;
-    final spacing = context.responsiveSpacing as double;
-    final smallSpacing = context.responsiveSmallSpacing as double;
-    final largeSpacing = context.responsiveLargeSpacing as double;
+    final padding = (context.responsivePadding as EdgeInsets?) ?? const EdgeInsets.all(12.0);
+    final spacing = (context.responsiveSpacing as double?) ?? 12.0;
+    final smallSpacing = (context.responsiveSmallSpacing as double?) ?? 8.0;
+    final largeSpacing = (context.responsiveLargeSpacing as double?) ?? 24.0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('User Detail')),
@@ -1051,8 +1056,8 @@ class UserDetailScreen extends StatelessWidget {
 
   Widget _buildDetailRow(
       BuildContext context, IconData icon, String label, String value) {
-    final spacing = context.responsiveSpacing as double;
-    final iconSize = context.responsiveIconSize(20) as double;
+    final spacing = (context.responsiveSpacing as double?) ?? 12.0;
+    final iconSize = (context.responsiveIconSize(20) as double?) ?? 20.0;
 
     return Row(
       children: [
