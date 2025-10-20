@@ -4,8 +4,13 @@
 import 'package:flutter/material.dart';
 import 'package:helloworld/screens/dashboard/profile_screen_user.dart' show ProfileScreen;
 import 'package:helloworld/screens/dashboard/settings_screen.dart' show SettingsScreen;
+import 'package:helloworld/screens/detail/product_detail_screen.dart';
+import 'package:helloworld/screens/cart/cart_screen.dart';
+import 'package:helloworld/screens/orders/order_history_screen.dart';
+
 import '../../services/auth_service.dart';
 import '../../services/product_service.dart';
+import '../../services/cart_service.dart';
 import '../../models/product.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/product_card.dart';
@@ -29,6 +34,16 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
   void initState() {
     super.initState();
     _loadProducts();
+
+    // Inisialisasi Cart & Orders saat Dashboard muncul (Opsi B)
+    _initCartAndOrders();
+  }
+
+  Future<void> _initCartAndOrders() async {
+    await CartService.loadCart();
+    await CartService.loadOrders();
+    if (!mounted) return;
+    setState(() {}); // update badge/count
   }
 
   void _loadProducts() {
@@ -42,11 +57,29 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
     setState(() {
       _filteredProducts = _products.where((product) {
         final matchesSearch = product.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                             product.description.toLowerCase().contains(_searchQuery.toLowerCase());
+            product.description.toLowerCase().contains(_searchQuery.toLowerCase());
         final matchesCategory = _selectedCategory == 'All' || product.category == _selectedCategory;
         return matchesSearch && matchesCategory;
       }).toList();
     });
+  }
+
+  Future<void> _openCart() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CartScreen()),
+    );
+    if (!mounted) return;
+    setState(() {}); // refresh badge/count when returned
+  }
+
+  Future<void> _openOrders() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
+    );
+    if (!mounted) return;
+    setState(() {}); // refresh if needed
   }
 
   @override
@@ -65,7 +98,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
-                  'assets/Logo.jpg',
+                  'assets/Logo.png',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(
@@ -85,6 +118,44 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // Orders button
+          IconButton(
+            onPressed: _openOrders,
+            icon: const Icon(Icons.history),
+            tooltip: 'Orders',
+          ),
+
+          // Cart button with badge
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                onPressed: _openCart,
+                icon: const Icon(Icons.shopping_cart_outlined),
+                tooltip: 'Cart',
+              ),
+              if (CartService.getCartItemCount() > 0)
+                Positioned(
+                  right: 6,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                    child: Center(
+                      child: Text(
+                        '${CartService.getCartItemCount()}',
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
           IconButton(
             onPressed: _showProfileMenu,
             icon: const Icon(Icons.person),
@@ -96,7 +167,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
         builder: (context, constraints) {
           final isDesktop = constraints.maxWidth > 1024;
           final isTablet = constraints.maxWidth > 768 && constraints.maxWidth <= 1024;
-          
+
           return SingleChildScrollView(
             padding: EdgeInsets.all(isDesktop ? 24 : (isTablet ? 20 : 16)),
             child: Column(
@@ -197,7 +268,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Search bar
                       TextField(
                         onChanged: (value) {
@@ -212,9 +283,9 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                           border: OutlineInputBorder(),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // Category filter
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -232,7 +303,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                                   });
                                   _filterProducts();
                                 },
-                                selectedColor: const Color(0xFF0D9488).withOpacity(0.2),
+                                // replaced withValues to avoid deprecated withOpacity
+                                selectedColor: const Color(0xFF0D9488).withValues(alpha: 0.2),
                                 checkmarkColor: const Color(0xFF0D9488),
                               ),
                             );
@@ -274,7 +346,7 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      
+
                       if (_filteredProducts.isEmpty)
                         const Center(
                           child: Padding(
@@ -316,10 +388,11 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
                               product: product,
                               showActions: false,
                               onTap: () {
-                                Navigator.pushNamed(
+                                Navigator.push(
                                   context,
-                                  '/product-detail',
-                                  arguments: product,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductDetailScreen(product: product, productId: '',),
+                                  ),
                                 );
                               },
                             );
@@ -350,8 +423,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
                 );
               },
             ),
@@ -361,8 +434,8 @@ class _UserDashboardScreenState extends State<UserDashboardScreen> {
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
                 );
               },
             ),

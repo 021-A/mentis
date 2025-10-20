@@ -9,7 +9,7 @@ import 'package:helloworld/screens/orders/orders_screen.dart';
 import 'package:helloworld/screens/products/products_screen.dart';
 import 'package:helloworld/screens/users/users_screen.dart';
 import 'package:helloworld/screens/analytics/analytics_screen.dart';
-
+import 'package:helloworld/screens/detail/product_detail_screen.dart';
 import '../../services/auth_service.dart';
 import '../../services/product_service.dart';
 import '../../models/product.dart';
@@ -56,7 +56,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
-                  'assets/Logo.jpg',
+                  'assets/Logo.png',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(
@@ -302,10 +302,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           return ProductCard(
                             product: product,
                             onTap: () {
-                              Navigator.pushNamed(
+                              Navigator.push(
                                 context,
-                                '/product-detail',
-                                arguments: product,
+                                MaterialPageRoute(
+                                  builder: (context) => ProductDetailScreen(product: product, productId: '',),
+                                ),
                               );
                             },
                             onEdit: () {

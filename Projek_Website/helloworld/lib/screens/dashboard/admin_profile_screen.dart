@@ -18,14 +18,14 @@ class AdminProfileScreen extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 40,
-              backgroundImage: AssetImage('assets/Logo.jpg'),
+              backgroundImage: AssetImage('assets/Logo.png'),
             ),
             const SizedBox(height: 16),
             const Text(
               'Admin Name: Super Admin',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const Text('Email: admin@mentis.com'),
+            const Text('Email: admin@test.com'),
             const SizedBox(height: 24),
             const Text(
               'Role: System Administrator',

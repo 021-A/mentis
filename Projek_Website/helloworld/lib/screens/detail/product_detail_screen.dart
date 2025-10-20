@@ -2,19 +2,39 @@
 import 'package:flutter/material.dart';
 import '../../models/product.dart';
 import '../../services/product_service.dart';
+import '../../services/cart_service.dart';
+import '../../utils/formatters.dart';
+import '../../utils/image_helper.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends StatefulWidget {
   final String productId;
+  final BaseProduct? product; // optional product passed from caller
 
-  const ProductDetailScreen({super.key, required this.productId, required BaseProduct product});
+  const ProductDetailScreen({
+    super.key,
+    required this.productId,
+    this.product,
+  });
+
+  @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  bool _isAdding = false;
 
   @override
   Widget build(BuildContext context) {
-    final product = ProductService.getProductById(productId);
+    // Use provided product if available; otherwise fetch by id
+    final product = widget.product ?? ProductService.getProductById(widget.productId);
 
     if (product == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Product Detail")),
+        appBar: AppBar(
+          title: const Text("Product Detail"),
+          backgroundColor: const Color(0xFF0D9488),
+          foregroundColor: Colors.white,
+        ),
         body: const Center(
           child: Text(
             "Product not found.",
@@ -27,7 +47,8 @@ class ProductDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(product.title),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: const Color(0xFF0D9488),
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -41,6 +62,42 @@ class ProductDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Product Image Section (large)
+                if (product.imageUrl != null && product.imageUrl!.isNotEmpty)
+                  Column(
+                    children: [
+                      Hero(
+                        tag: 'product_${product.id}',
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: double.infinity,
+                            height: 300,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0D9488).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ImageHelper.getImageWidget(
+                              product.imageUrl,
+                              width: double.infinity,
+                              height: 300,
+                              fit: BoxFit.cover,
+                              errorWidget: Container(
+                                alignment: Alignment.center,
+                                child: const Icon(
+                                  Icons.inventory,
+                                  size: 80,
+                                  color: Color(0xFF0D9488),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+
                 // Product Title
                 Text(
                   product.title,
@@ -60,14 +117,13 @@ class ProductDetailScreen extends StatelessWidget {
                       label: Text(product.category),
                       backgroundColor: Colors.blue.shade50,
                     ),
+                    // Safely get status display name
                     Chip(
                       label: Text(
-                        product.status.name.toUpperCase(),
+                        _getStatusDisplayName(product.status),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      backgroundColor: product.status == ProductStatus.active
-                          ? Colors.green.shade100
-                          : Colors.grey.shade300,
+                      backgroundColor: _getStatusColor(product.status),
                     ),
                   ],
                 ),
@@ -82,13 +138,13 @@ class ProductDetailScreen extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                // Price
+                // Price - Format dengan Rupiah
                 Row(
                   children: [
                     const Icon(Icons.price_change, color: Colors.orange),
                     const SizedBox(width: 8),
                     Text(
-                      "\$${product.price.toStringAsFixed(2)}",
+                      AppFormatters.formatCurrency(product.price),
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -105,14 +161,27 @@ class ProductDetailScreen extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                // Created at
+                // Created at - Format tanggal lebih baik
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 18),
+                    const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
                     const SizedBox(width: 6),
                     Text(
-                      "Created: ${product.createdAt.toLocal().toString().split(' ')[0]}",
-                      style: const TextStyle(fontSize: 14),
+                      "Created: ${AppFormatters.formatDate(product.createdAt)}",
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                ),
+
+                // Show relative time
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 18, color: Colors.grey),
+                    const SizedBox(width: 6),
+                    Text(
+                      AppFormatters.formatRelativeTime(product.createdAt),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -129,6 +198,35 @@ class ProductDetailScreen extends StatelessWidget {
     );
   }
 
+  // Helper method to safely get status display name
+  String _getStatusDisplayName(dynamic status) {
+    if (status == null) return 'ACTIVE';
+
+    if (status is ProductStatus) {
+      return status.displayName.toUpperCase();
+    }
+
+    // Fallback: convert to string
+    return status.toString().split('.').last.toUpperCase();
+  }
+
+  // Helper method to get status color
+  Color _getStatusColor(dynamic status) {
+    if (status == null || status == ProductStatus.active) {
+      return Colors.green.shade100;
+    }
+
+    if (status == ProductStatus.draft) {
+      return Colors.orange.shade100;
+    }
+
+    if (status == ProductStatus.inactive) {
+      return Colors.grey.shade300;
+    }
+
+    return Colors.grey.shade300;
+  }
+
   /// Build different widgets depending on the product type
   Widget _buildSpecificProductDetails(BaseProduct product) {
     if (product is DigitalProduct) {
@@ -140,11 +238,12 @@ class ProductDetailScreen extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
+          // Format download count dengan thousand separator
           Row(
             children: [
               const Icon(Icons.cloud_download, color: Colors.blueAccent),
               const SizedBox(width: 6),
-              Text("Downloads: ${product.downloadCount}"),
+              Text("Downloads: ${AppFormatters.formatNumber(product.downloadCount)}"),
             ],
           ),
           const SizedBox(height: 8),
@@ -172,19 +271,75 @@ class ProductDetailScreen extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
+          // Format stock dengan thousand separator & warning color
           Row(
             children: [
-              const Icon(Icons.inventory, color: Colors.green),
+              Icon(
+                Icons.inventory,
+                color: product.stock > 10
+                    ? Colors.green
+                    : product.stock > 0
+                        ? Colors.orange
+                        : Colors.red,
+              ),
               const SizedBox(width: 6),
-              Text("Stock: ${product.stock} items"),
+              Text(
+                "Stock: ${AppFormatters.formatNumber(product.stock)} items",
+                style: TextStyle(
+                  color: product.stock > 10
+                      ? Colors.green
+                      : product.stock > 0
+                          ? Colors.orange
+                          : Colors.red,
+                  fontWeight: product.stock < 10 ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              // Low stock badge
+              if (product.stock > 0 && product.stock < 10)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.orange),
+                  ),
+                  child: const Text(
+                    'Low Stock',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              else if (product.stock == 0)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.red),
+                  ),
+                  child: const Text(
+                    'Out of Stock',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 8),
+          // Format weight dengan decimal
           Row(
             children: [
               const Icon(Icons.monitor_weight, color: Colors.green),
               const SizedBox(width: 6),
-              Text("Weight: ${product.weight} kg"),
+              Text("Weight: ${AppFormatters.formatNumberWithDecimal(product.weight, decimalDigits: 2)} kg"),
             ],
           ),
         ],
@@ -206,26 +361,57 @@ class ProductDetailScreen extends StatelessWidget {
         icon: const Icon(Icons.download),
         label: const Text("Download Now"),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blueAccent,
+          backgroundColor: const Color(0xFF0D9488),
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     } else if (product is PhysicalProduct) {
+      // Disable button jika stock habis
+      final isOutOfStock = product.stock == 0;
+
       return ElevatedButton.icon(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Added to cart")),
-          );
-        },
-        icon: const Icon(Icons.shopping_cart),
-        label: const Text("Add to Cart"),
+        onPressed: isOutOfStock
+            ? null
+            : () async {
+                // prevent double-tap
+                if (_isAdding) return;
+                setState(() => _isAdding = true);
+
+                final success = await CartService.addToCart(product, quantity: 1);
+
+                // Immediately check mounted before using context or calling setState
+                if (!mounted) {
+                  return;
+                }
+
+                setState(() => _isAdding = false);
+
+                if (success) {
+
+                   if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Added to cart")),
+                  );
+                } else {
+                  
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Failed to add to cart"), 
+                    backgroundColor: Colors.red),
+                  );
+                }
+              },
+        icon: _isAdding ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Icon(isOutOfStock ? Icons.block : Icons.shopping_cart),
+        label: Text(isOutOfStock ? "Out of Stock" : (_isAdding ? "Adding..." : "Add to Cart")),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: isOutOfStock ? Colors.grey : Colors.green,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     } else {

@@ -88,7 +88,7 @@ class FullScreenLoading extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(40),
                   child: Image.asset(
-                    'assets/Logo.jpg',
+                    'assets/Logo.png',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(

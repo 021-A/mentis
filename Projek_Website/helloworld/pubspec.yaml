@@ -6,47 +6,71 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.0
+  sdk: '>=3.9.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
+  
   cupertino_icons: ^1.0.8
 
-  # Local storage dependencies
-  shared_preferences: ^2.2.2
-  sqflite: ^2.3.0
+  # ===== PRIORITY 1: Core Features (WAJIB) =====
+  # Local storage & persistence
+  shared_preferences: ^2.3.2      # Login state & user preferences
+  sqflite: ^2.3.3+2               # Local database
+  path_provider: ^2.1.4           # File path management
+  path: ^1.9.0                    # ✨ NEW: Path manipulation (for image_helper.dart)
+  
+  # Formatting & Localization
+  intl: ^0.19.0                   # Currency, date, number formatting
+  
+  # ===== Firebase (Sudah ada, tetap dipertahankan) =====
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  
+  # ===== PRIORITY 2: Enhanced Features =====
+  # Image & Media
+  image_picker: ^1.1.2            # Pick images from gallery/camera
+  cached_network_image: ^3.4.1    # Cache images for better performance
+  
+  # Network & API
+  dio: ^5.7.0                     # Better HTTP client
+  
+  # Security
+  flutter_secure_storage: ^9.2.2  # Secure storage for tokens
+  
+  # ===== UI & Animation (Sudah ada) =====
+  lottie: ^3.1.3                  # Lottie animations
+  fl_chart: ^0.69.0               # Charts & graphs
 
-  # Firebase dependencies (opsional)
-  firebase_core: ^4.1.0
-  firebase_auth: ^6.0.2
-  cloud_firestore: ^6.0.1
-
-  # UI & Animation
-  lottie: ^3.0.0
-
-  # Date & Time formatting
-  intl: ^0.20.2
-
-  # Chart
-  fl_chart: ^0.69.0
+  provider: ^6.0.5
+  
+  # ===== PRIORITY 3: Optional (Install nanti jika butuh) =====
+  # webview_flutter: ^4.10.0      # Web content preview
+  # file_picker: ^8.1.4           # Pick files (PDF, docs, etc)
+  # url_launcher: ^6.3.1          # Open URLs/emails
+  # connectivity_plus: ^6.0.5     # Check internet connection
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  
+  flutter_lints: ^5.0.0           # Updated to latest version
 
 flutter:
   uses-material-design: true
 
   assets:
+    - assets/
     - assets/Background.jpg
-    - assets/Logo.jpg
+    - assets/Logo.png
 
   fonts:
     - family: Poppins
       fonts:
         - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
         - asset: assets/fonts/Poppins-Medium.ttf
           weight: 500
         - asset: assets/fonts/Poppins-SemiBold.ttf

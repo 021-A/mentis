@@ -3,6 +3,8 @@
 
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../services/auth_service.dart';
+import '../models/user.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,6 +15,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  final AuthService _authService = AuthService(); // ✨ NEW: Auth service
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -57,11 +60,52 @@ class _SplashScreenState extends State<SplashScreen>
   void _startAnimation() {
     _animationController.forward();
     
-    Timer(const Duration(milliseconds: 6000), () {
+    // ✨ ENHANCED: Check authentication before navigating
+    Timer(const Duration(milliseconds: 3000), () async {
+      if (mounted) {
+        await _checkAuthAndNavigate();
+      }
+    });
+  }
+
+  // ✨ NEW: Check authentication and navigate accordingly
+  Future<void> _checkAuthAndNavigate() async {
+    try {
+      final isLoggedIn = await _authService.isLoggedIn;
+      
+      if (!mounted) return;
+      
+      if (isLoggedIn) {
+        // User is logged in, get user data
+        final user = await _authService.getCurrentUser();
+        
+        if (user != null) {
+          // Navigate based on user role  
+          if (!mounted) return; // ✅ Cek di awal sebelum navigasi apapun
+          // Navigate based on user role
+          if (user.role == UserRole.admin) {
+            Navigator.pushReplacementNamed(context, '/admin-dashboard');
+          } else {
+            Navigator.pushReplacementNamed(context, '/user-dashboard');
+          }
+        } else {
+          // User data not found, go to login
+          if (!mounted) return; // ✅ Cek mounted
+          // User data not found, go to login
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      } else {
+        // User not logged in, go to login
+        if (!mounted) return; // ✅ Cek mounted
+        // User not logged in, go to login
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } catch (e) {
+      // Error occurred, go to login
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/login');
       }
-    });
+    }
   }
 
   @override
@@ -121,7 +165,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(60),
                             child: Image.asset(
-                              'assets/Logo.jpg',
+                              'assets/Logo.png',
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(

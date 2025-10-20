@@ -28,7 +28,7 @@ class AppConstants {
   
   // Assets
   static const String backgroundImage = 'assets/Background.jpg';
-  static const String logoImage = 'assets/Logo.jpg';
+  static const String logoImage = 'assets/Logo.png';
   
   // Animation Durations (milliseconds)
   static const int splashDurationMs = 3500;

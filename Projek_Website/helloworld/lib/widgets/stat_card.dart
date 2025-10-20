@@ -2,6 +2,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import '../utils/formatters.dart';
 
 class StatCard extends StatelessWidget {
   final String title;
@@ -80,9 +81,9 @@ class StatCard extends StatelessWidget {
               
               const SizedBox(height: 16),
               
-              // Value
+              // Value - ✨ ENHANCED: Smart formatting
               Text(
-                value,
+                _formatValue(value),
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -155,6 +156,46 @@ class StatCard extends StatelessWidget {
       ),
     );
   }
+
+  // ✨ NEW: Smart value formatting
+  String _formatValue(String value) {
+    // Remove any existing formatting
+    final cleanValue = value.replaceAll(RegExp(r'[^\d.]'), '');
+    
+    // Check if it's a currency (contains $ or Rp)
+    if (value.contains('\$')) {
+      final amount = double.tryParse(cleanValue);
+      if (amount != null) {
+        return AppFormatters.formatCurrencyUSD(amount);
+      }
+    } else if (value.toLowerCase().contains('rp')) {
+      final amount = double.tryParse(cleanValue);
+      if (amount != null) {
+        return AppFormatters.formatCurrency(amount);
+      }
+    }
+    
+    // Check if it's a percentage
+    if (value.contains('%')) {
+      final percentage = double.tryParse(cleanValue);
+      if (percentage != null) {
+        return AppFormatters.formatPercentage(percentage);
+      }
+    }
+    
+    // Check if it's a large number (format with thousand separator)
+    final number = int.tryParse(cleanValue);
+    if (number != null) {
+      // Use compact format for large numbers (>999)
+      if (number > 999) {
+        return AppFormatters.formatCompactNumber(number);
+      }
+      return AppFormatters.formatNumber(number);
+    }
+    
+    // If nothing matches, return original value
+    return value;
+  }
 }
 
 // Variant untuk StatCard yang lebih compact
@@ -205,8 +246,9 @@ class CompactStatCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ✨ ENHANCED: Smart formatting for compact card too
                     Text(
-                      value,
+                      _formatValue(value),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -229,5 +271,39 @@ class CompactStatCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // ✨ NEW: Smart value formatting (same as StatCard)
+  String _formatValue(String value) {
+    final cleanValue = value.replaceAll(RegExp(r'[^\d.]'), '');
+    
+    if (value.contains('\$')) {
+      final amount = double.tryParse(cleanValue);
+      if (amount != null) {
+        return AppFormatters.formatCurrencyUSD(amount);
+      }
+    } else if (value.toLowerCase().contains('rp')) {
+      final amount = double.tryParse(cleanValue);
+      if (amount != null) {
+        return AppFormatters.formatCurrency(amount);
+      }
+    }
+    
+    if (value.contains('%')) {
+      final percentage = double.tryParse(cleanValue);
+      if (percentage != null) {
+        return AppFormatters.formatPercentage(percentage);
+      }
+    }
+    
+    final number = int.tryParse(cleanValue);
+    if (number != null) {
+      if (number > 999) {
+        return AppFormatters.formatCompactNumber(number);
+      }
+      return AppFormatters.formatNumber(number);
+    }
+    
+    return value;
   }
 }

@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart'; // ✨ ADD THIS LINE
 
 import 'screens/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -14,12 +15,24 @@ import 'screens/users/users_screen.dart';
 import 'screens/analytics/analytics_screen.dart';
 import 'screens/dashboard/settings_screen.dart';
 import 'screens/detail/product_detail_screen.dart';
+import 'package:helloworld/services/product_service.dart';
+
+// New imports for Cart & Order History routes
+import 'screens/cart/cart_screen.dart';
+import 'screens/orders/order_history_screen.dart';
 
 // Import model agar kita bisa memeriksa tipe argument saat routing
 import 'models/product.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // ✨ NEW: Initialize intl for Indonesian locale (FIX LocaleDataException)
+  await initializeDateFormatting('id_ID', null);
+  
+  // Load products from SharedPreferences on app start
+  await ProductService.loadProducts();
+  
   runApp(const MentisApp());
 }
 
@@ -87,6 +100,10 @@ class MentisApp extends StatelessWidget {
         '/users': (context) => const UsersScreen(),
         '/analytics': (context) => const AnalyticsScreen(),
         '/settings': (context) => const SettingsScreen(),
+
+        // NEW: cart & order-history named routes (literal strings to avoid missing static getters)
+        '/cart': (context) => const CartScreen(),
+        '/order-history': (context) => const OrderHistoryScreen(),
       },
 
       // Handle routes that need runtime arguments
